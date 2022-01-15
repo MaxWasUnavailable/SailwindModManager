@@ -25,13 +25,15 @@ class ModManager(Loggable):
         self.filter_tags = []
         self.filter_search = ""
 
-    def __init_git(self) -> Github:
+    def __init_git(self, use_token: bool = True) -> Github:
         """
         Initialise the Github connection.
         Uses a token if one is configured in the config.
         :return: Github connection instance
         """
-        git_token = self.config.config.get("github_access_token", None)
+        git_token = None
+        if use_token:
+            git_token = self.config.config.get("github_access_token", None)
         if git_token:
             return Github(login_or_token=git_token)
         else:
@@ -83,7 +85,7 @@ class ModManager(Loggable):
         for mod in mods:
             self.mods[mod.id] = mod
 
-    def fetch_info(self) -> bool:
+    def fetch_info(self, second_attempt: bool = False) -> bool:
         """
         Fetches information on all mods from the configured github repositories.
         :return: Whether or not the info refresh was rate limited by Github.
@@ -116,6 +118,11 @@ class ModManager(Loggable):
                 self.log(str(e), is_error=True)
                 if "403" in str(e):
                     rate_limited = True
+                if "401" in str(e):
+                    self.git = self.__init_git(False)
+                    if not second_attempt:
+                        self.log("Attempting to refetch without token.")
+                        self.fetch_info(True)
 
         self.update_mod_list(mods)
 
