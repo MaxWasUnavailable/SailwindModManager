@@ -1,5 +1,7 @@
-from PySide2 import QtCore, QtWidgets, QtGui
+from src.ManagerGUI.DownloaderThread import DownloaderThread
 from src.Mod.Mod import Mod
+
+from PySide2 import QtCore, QtWidgets, QtGui
 
 
 class ModWidget(QtWidgets.QFrame):
@@ -11,6 +13,8 @@ class ModWidget(QtWidgets.QFrame):
         self.setFrameStyle(QtCore.Qt.SolidLine)
 
         self.mod = mod
+
+        self.downloader_thread = DownloaderThread(self)
 
         self.setToolTip(self.mod.display_name)
 
@@ -27,11 +31,12 @@ class ModWidget(QtWidgets.QFrame):
         name_label = QtWidgets.QLabel(self)
         name_label.setText(self.mod.display_name)
         tags_label = QtWidgets.QLabel(self)
-        tags_label.setStyleSheet("QLabel {color: #e9a576}")
+        tags_label.setStyleSheet("QLabel {color: #006994}")
         tags_label.setText(str(", ".join(self.mod.tags)))
 
-        download_button.clicked.connect(lambda: self.mod.download())
-        # TODO: replace with lambda call to mod manager through parent.
+        download_button.clicked.connect(lambda: self.threaded_download())
+        # TODO: replace with lambda call to mod manager through parent?
+        # Technically not necessary, though.
 
         layout.addWidget(name_label, 0, 0)
         layout.addWidget(tags_label, 1, 0)
@@ -44,19 +49,47 @@ class ModWidget(QtWidgets.QFrame):
         Generates the text to display in the mod info widget when selected.
         :return: The text to display.
         """
-        text = \
-            f"""
-{self.mod.display_name} ({self.mod.id})
+        text = ""
 
-{", ".join(self.mod.tags)}
+        text += f"""<h1>{self.mod.display_name} ({self.mod.id})</h1>"""
 
-{self.mod.description}
+        if len(self.mod.tags) > 0:
+            text += f"""<div style="color: #808080">"""
+            text += f"""<i>{"</i> | <i>".join(self.mod.tags)}</i>"""
+            text += f"""</div><br><br>"""
 
+        if self.mod.description:
+            text += f"""{self.mod.description}<br><br>"""
 
-Author: {self.mod.author}
-Version: {self.mod.version}
-Made for game version: {self.mod.game_version}
-Made for UMM version: {self.mod.manager_version}
-            """
+        if self.mod.author:
+            text += f"""<u>Author:</u> {self.mod.author}<br>"""
+
+        if self.mod.version:
+            text += f"""<u>Version:</u> {self.mod.version}<br>"""
+
+        if self.mod.game_version:
+            text += f"""<u>Game version:</u> {self.mod.game_version}<br>"""
+
+        if self.mod.manager_version:
+            text += f"""<u>UMM version:</u> {self.mod.manager_version}<br>"""
+
+        if self.mod.repository:
+            text += f"""<u>Repository:</u> {self.mod.repository}<br>"""
+
+        if self.mod.home_page:
+            text += f"""<u>Home page:</u> {self.mod.home_page}"""
 
         return text
+
+    def threaded_download(self):
+        """
+        Download the mod using the downloader thread, preventing it from blocking the main thread.
+        """
+        if not self.downloader_thread.isRunning():
+            self.downloader_thread.start()
+
+    def thread_finished(self):
+        """
+        Called when the downloader thread is finished.
+        """
+        pass
