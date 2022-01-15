@@ -192,10 +192,13 @@ class ModManager(Loggable):
 
         return filtered_mods
 
+    def sort_mods(self, mods: list[Mod]) -> list[Mod]:
+        return sorted(mods, key=lambda mod: mod.display_name)
+
     def get_mods(self) -> list[Mod]:
         mods = list(self.mods.values())
 
         mods_filtered_tags = self.apply_filter_tags(mods)
         mods_filtered_search = self.apply_filter_search(mods_filtered_tags)
 
-        return mods_filtered_search
+        return self.sort_mods(mods_filtered_search)
