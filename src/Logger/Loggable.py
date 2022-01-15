@@ -3,6 +3,7 @@ from src.Logger.Logger import Logger
 
 class Loggable:
     def __init__(self, logger: Logger):
+        super(Loggable, self).__init__()
         self.logger = None
         self.verbose = False
 
