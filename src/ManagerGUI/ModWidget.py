@@ -18,7 +18,11 @@ class ModWidget(QtWidgets.QFrame):
 
         self.setToolTip(self.mod.display_name)
 
+        self.context_menu = None
+        self.context_actions = []
+
         self.setup_widget()
+        self.setup_context_menu()
 
     def setup_widget(self) -> None:
         """
@@ -34,6 +38,7 @@ class ModWidget(QtWidgets.QFrame):
         tags_label.setStyleSheet("QLabel {color: #006994}")
         tags_label.setText(str(", ".join(self.mod.tags)))
 
+        self.downloader_thread.finished.connect(self.thread_finished)
         download_button.clicked.connect(lambda: self.threaded_download())
         # TODO: replace with lambda call to mod manager through parent?
         # Technically not necessary, though.
@@ -43,6 +48,21 @@ class ModWidget(QtWidgets.QFrame):
         layout.addWidget(download_button, 2, 0)
 
         self.setLayout(layout)
+
+    def setup_context_menu(self) -> None:
+        self.context_actions.append(QtWidgets.QAction(text="Favourite"))
+        self.context_actions[-1].triggered.connect(self.favourite)
+        self.context_actions.append(QtWidgets.QAction(text="Set colour"))
+        self.context_actions[-1].triggered.connect(self.set_colour)
+
+        self.context_menu = QtWidgets.QMenu()
+        self.context_menu.addActions(self.context_actions)
+
+    def favourite(self):
+        print("Favourite")
+
+    def set_colour(self):
+        print("Set colour")
 
     def get_display_text(self) -> str:
         """
@@ -93,3 +113,7 @@ class ModWidget(QtWidgets.QFrame):
         Called when the downloader thread is finished.
         """
         pass
+
+    def contextMenuEvent(self, event: QtGui.QContextMenuEvent) -> None:
+        self.context_menu.popup(QtGui.QCursor.pos())
+
