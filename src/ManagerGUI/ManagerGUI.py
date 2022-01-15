@@ -318,8 +318,8 @@ class ModList(QtWidgets.QListWidget):
         """
         Execute when the selected item has changed in the Mod List widget.
         """
-        self.download_tab.mod_display.update_display(self.itemWidget(self.currentItem()))
-        pass
+        if self.currentItem() is not None:
+            self.download_tab.mod_display.update_display(self.itemWidget(self.currentItem()))
 
     def refetch_list(self):
         """
