@@ -3,6 +3,7 @@ from src.Config.Config import Config
 from src.Mod.Mod import Mod
 from github import Github
 from copy import copy
+import requests
 import json
 
 
@@ -23,8 +24,6 @@ class ModManager(Loggable):
 
         self.filter_tags = []
         self.filter_search = ""
-
-        self.refresh()
 
     def __init_git(self) -> Github:
         """
@@ -103,6 +102,8 @@ class ModManager(Loggable):
                         for file in repo.get_contents(f"mods/{mod_folder.name}"):
                             if file.name == "info.json":
                                 data = json.loads(file.decoded_content.decode("utf-8"))
+                            if file.name == "mod.png":
+                                mod_image = requests.get(file.download_url).content
 
                         if data is not None:
                             mods.append(self.parse_mod(data, download_url=mod_url, image=mod_image))
