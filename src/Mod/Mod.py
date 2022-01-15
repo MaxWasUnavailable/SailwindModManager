@@ -1,4 +1,9 @@
 from dataclasses import dataclass, field
+from ast import literal_eval
+from os.path import exists
+from shutil import rmtree
+from os import mkdir
+import requests
 
 
 @dataclass
@@ -22,6 +27,33 @@ class Mod:
     image: bytes = None
     modloader_required: bool = False
     additional_fields: dict = field(default_factory=dict)
+
+    def download(self, path="./data/downloads/"):
+        """
+        Downloads mod to provided path directory.
+        :param path: Directory to download to.
+        """
+        parsed_url = literal_eval(requests.get(self.download_url).content.decode("utf-8"))
+        if len(parsed_url) == 0:
+            return False
+
+        if not exists(path):
+            mkdir(path)
+
+        remote_folder_name = parsed_url[0]['path'].split("/")[1]
+
+        full_path = path + remote_folder_name + "/"
+
+        if exists(full_path):
+            rmtree(full_path)
+        mkdir(full_path)
+
+        for file in parsed_url:
+            file_to_save = open(full_path + file['name'], 'wb')
+            file_to_save.write(requests.get(file['download_url']).content)
+            file_to_save.close()
+
+        return True
 
 
 if __name__ == '__main__':
