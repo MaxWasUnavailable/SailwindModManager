@@ -56,10 +56,6 @@ class ManagerGUI(Loggable, QtWidgets.QMainWindow):
         self.config = config
         self.mod_manager = ModManager(logger, config)
 
-        self.mod_display = None
-        self.mod_list = None
-        self.misc_menu = None
-
         self.setup_window()
 
     def closeEvent(self, QCloseEvent):
@@ -81,10 +77,46 @@ class ManagerGUI(Loggable, QtWidgets.QMainWindow):
         Sets up the window.
         Initialises the necessary widgets.
         """
-        self.central_widget = QtWidgets.QWidget(self)
+        self.central_widget = ManagerTabWidget(self, self.mod_manager)
         self.setCentralWidget(self.central_widget)
 
-        layout = QtWidgets.QGridLayout(self.central_widget)
+
+class ManagerTabWidget(QtWidgets.QTabWidget):
+    """
+    A widget that holds all tabs.
+    """
+    def __init__(self, parent, mod_manager: ModManager):
+        super().__init__(parent)
+        self.mod_manager = mod_manager
+
+        self.setup_tabs()
+
+    def setup_tabs(self):
+        """
+        Sets up the tabs.
+        Initialises the necessary tabs and adds them to the tab widget.
+        """
+
+        self.addTab(DownloadTab(self, self.mod_manager), "Download Tab")
+
+
+class DownloadTab(QtWidgets.QWidget):
+    """
+    A tab that holds download-related widgets.
+    """
+    def __init__(self, parent, mod_manager: ModManager):
+        super().__init__(parent)
+        self.mod_manager = mod_manager
+
+        self.mod_display = None
+        self.mod_list = None
+        self.misc_menu = None
+
+        self.setup_widget()
+
+    def setup_widget(self):
+
+        layout = QtWidgets.QGridLayout(self)
 
         self.mod_display = ModDisplay(self)
         self.mod_list = ModListContainer(self, mod_manager=self.mod_manager)
@@ -218,7 +250,7 @@ class ModListSearch(QtWidgets.QWidget):
 
         self.setFixedHeight(25)
 
-        self.main_window = self.parent().parent()
+        self.download_tab = self.parent().parent()
 
         layout = QtWidgets.QHBoxLayout()
 
@@ -234,7 +266,7 @@ class ModListSearch(QtWidgets.QWidget):
 
     def execute_search(self):
         self.mod_manager.set_filter_search(self.search_bar.text())
-        self.main_window.mod_list.list.refresh_list()
+        self.download_tab.mod_list.list.refresh_list()
 
 
 class ModListSearchBar(QtWidgets.QLineEdit):
@@ -261,7 +293,7 @@ class ModListSearchButton(QtWidgets.QPushButton):
 
         self.setText(">")
 
-        self.main_window = self.parent().parent().parent()
+        self.main_window = self.parent().parent().parent().parent().parent()
         self.search_bar = self.parent().search_bar
 
         self.pressed.connect(self.parent().execute_search)
@@ -274,7 +306,7 @@ class ModList(QtWidgets.QListWidget):
         self.mod_manager = mod_manager
 
         self.refetcher_thread = RefetcherThread(self)
-        self.main_window = self.parent().parent()
+        self.download_tab = self.parent().parent()
         self.rate_limited = False
 
         self.refetcher_thread.finished.connect(self.thread_finished)
@@ -286,7 +318,7 @@ class ModList(QtWidgets.QListWidget):
         """
         Execute when the selected item has changed in the Mod List widget.
         """
-        self.main_window.mod_display.update_display(self.itemWidget(self.currentItem()))
+        self.download_tab.mod_display.update_display(self.itemWidget(self.currentItem()))
         pass
 
     def refetch_list(self):
@@ -346,7 +378,7 @@ class MiscMenu(QtWidgets.QFrame):
         super().__init__(parent)
         # self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.MinimumExpanding))
         self.setFrameStyle(QtCore.Qt.SolidLine)
-        self.main_window = self.parent()
+        self.main_window = self.parent().parent().parent()
 
         self.setup_widget()
 
