@@ -39,7 +39,7 @@ class ModManager(Loggable):
             return Github()
 
     def parse_mod(self, mod_data: dict, download_url: str = None, image: bytes = None) -> Mod:
-        self.log(f"Parsing new mod from {download_url}")
+        self.log(f"Parsing new mod from {download_url}", is_verbose=True)
         self.log(f"info.json: {str(mod_data)}", is_verbose=True)
 
         mod_id = mod_data.get("Id")
@@ -99,6 +99,7 @@ class ModManager(Loggable):
                         mod_url = mod_folder.url
                         mod_image = None
                         data = None
+                        self.log(f"Fetching mod from: \"{mod_url}\"")
                         for file in repo.get_contents(f"mods/{mod_folder.name}"):
                             if file.name == "info.json":
                                 data = json.loads(file.decoded_content.decode("utf-8"))
