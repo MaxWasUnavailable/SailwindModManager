@@ -211,3 +211,15 @@ class ModManager(Loggable):
         mods_filtered_search = self.apply_filter_search(mods_filtered_tags)
 
         return self.sort_mods(mods_filtered_search)
+
+    def get_installed_mods(self) -> list[Mod]:
+        return self.get_mods()
+
+    def install_mod(self, mod_id: str) -> None:
+        pass
+
+    def uninstall_mod(self, mod_id: str) -> None:
+        pass
+
+    def update_mod(self, mod_id: str) -> None:
+        pass
