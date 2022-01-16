@@ -112,7 +112,7 @@ class ModManager(Loggable):
                         for file in repo.get_contents(f"mods/{mod_folder.name}"):
                             if file.name == "info.json":
                                 data = json.loads(file.decoded_content.decode("utf-8"))
-                            if file.name == "mod.png":
+                            if file.name in ["mod.png", "mod.jpg"]:
                                 mod_image = requests.get(file.download_url).content
 
                         if data is not None:
