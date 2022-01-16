@@ -28,10 +28,11 @@ class Mod:
     modloader_required: bool = False
     additional_fields: dict = field(default_factory=dict)
 
-    def download(self, path="./data/downloads/"):
+    def download(self, path="./data/downloads/") -> bool:
         """
         Downloads mod to provided path directory.
         :param path: Directory to download to.
+        :return: Whether or not the download was successful.
         """
         parsed_url = literal_eval(requests.get(self.download_url).content.decode("utf-8"))
         if len(parsed_url) == 0:
@@ -44,6 +45,7 @@ class Mod:
 
         full_path = path + remote_folder_name + "/"
 
+        # Delete mod directory if it already exists, to prevent keeping outdated / removed files.
         if exists(full_path):
             rmtree(full_path)
         mkdir(full_path)

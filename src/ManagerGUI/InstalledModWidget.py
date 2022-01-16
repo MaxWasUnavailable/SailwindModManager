@@ -8,6 +8,10 @@ class InstalledModWidget(QtWidgets.QFrame):
     Framed widget that holds and displays an installed Mod's info for use in Qt's list widget.
     """
     def __init__(self, mod: Mod, parent=None):
+        """
+        :param mod: Mod to base the widget off of.
+        :param parent: Parent Qt Object/Widget
+        """
         super().__init__(parent)
         self.setFrameStyle(QtCore.Qt.SolidLine)
 

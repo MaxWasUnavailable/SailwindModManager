@@ -12,9 +12,9 @@ class ModManager(Loggable):
     Instance of a Mod Manager.
     Handles:
         - Fetching of mod information
-        - Caching of mod information (optional)
+        - Caching of mod information (optional / TODO)
         - Downloading of mods
-        - Managing of mod installation (optional)
+        - Managing of mod installation (optional / TODO)
     """
     def __init__(self, logger, config: Config = None):
         super(ModManager, self).__init__(logger=logger)
@@ -40,6 +40,13 @@ class ModManager(Loggable):
             return Github()
 
     def parse_mod(self, mod_data: dict, download_url: str = None, image: bytes = None) -> Mod:
+        """
+        Parse a mod's data and return a Mod object.
+        :param mod_data: Mod's data as dictionary
+        :param download_url: URL where the mod can be downloaded from
+        :param image: Bytes object representing the mod's image
+        :return: Parsed Mod object
+        """
         self.log(f"Parsing new mod from {download_url}", is_verbose=True)
         self.log(f"info.json: {str(mod_data)}", is_verbose=True)
 
@@ -88,6 +95,7 @@ class ModManager(Loggable):
     def fetch_info(self, second_attempt: bool = False) -> bool:
         """
         Fetches information on all mods from the configured github repositories.
+        :param second_attempt: Whether or not this is the second attempt already, when retrying after an invalid token was provided. Prevents infinite recursion.
         :return: Whether or not the info refresh was rate limited by Github.
         """
         mods = []
@@ -128,19 +136,26 @@ class ModManager(Loggable):
 
         return not rate_limited
 
-    def download_mod(self, mod_id) -> None:
+    def download_mod(self, mod_id) -> bool:
+        """
+        Downloads a mod via its given mod_id.
+        :param mod_id: Mod id of the mod to download
+        :return: Whether or not the download was successful
+        """
         self.log(f"Attempting to download mod: \"{mod_id}\"")
         mod = self.mods.get(mod_id, None)
 
         if mod is None:
             self.log("Mod not found. Aborting download.")
-            return
+            return False
 
         downloads_dir = self.config.config.get("downloads_directory", "")
         if mod.download(downloads_dir):
             self.log("Mod downloaded successfully.")
+            return True
         else:
             self.log("Mod download failed.")
+            return False
 
     def clear_mods(self) -> None:
         """
@@ -158,21 +173,44 @@ class ModManager(Loggable):
         self.fetch_info()
 
     def add_filter_tag(self, tag: str) -> None:
+        """
+        Add tag to tag filter list.
+        :param tag: Tag to add to tag filter
+        """
         self.filter_tags.append(tag)
 
     def clear_filter_tags(self) -> None:
+        """
+        Clear tag filter list.
+        """
         self.filter_tags.clear()
 
     def remove_filter_tag(self, tag: str) -> None:
+        """
+        Remove tag from tag filter list.
+        :param tag: Tag to remove from tag filter
+        """
         self.filter_tags.remove(tag)
 
     def set_filter_search(self, search: str) -> None:
+        """
+        Set search filter's search term.
+        :param search: Search term to use.
+        """
         self.filter_search = search
 
     def clear_filter_search(self) -> None:
+        """
+        Clear search filter's search term.
+        """
         self.filter_search = ""
 
     def apply_filter_tags(self, mods: list[Mod]) -> list[Mod]:
+        """
+        Apply tag filter list to provided list of mods.
+        :param mods: List of mods to apply the filter to.
+        :return: Filtered list of mods.
+        """
         if len(self.filter_tags) == 0:
             return mods
         filtered_mods = []
@@ -180,16 +218,18 @@ class ModManager(Loggable):
         for mod in mods:
             for tag in self.filter_tags:
                 if tag in mod.tags:
+                    # Copy to prevent weird behaviour.
                     filtered_mods.append(copy(mod))
 
         return filtered_mods
 
     def apply_filter_search(self, mods: list[Mod], fuzzy: bool = False) -> list[Mod]:
         """
-        TODO: Fuzzy search
-        :param mods:
-        :param fuzzy:
-        :return:
+        Apply search filter to provided list of mods.
+        TODO: Fuzzy search?
+        :param mods: List of mods to apply the filter to.
+        :param fuzzy: Whether or not to use fuzzy matching. (CURRENTLY UNUSED)
+        :return: Filtered list of mods.
         """
         if self.filter_search == "":
             return mods
@@ -202,9 +242,18 @@ class ModManager(Loggable):
         return filtered_mods
 
     def sort_mods(self, mods: list[Mod]) -> list[Mod]:
+        """
+        Sort mods alphabetically.
+        :param mods: List of mods to sort.
+        :return: Sorted list of mods.
+        """
         return sorted(mods, key=lambda mod: mod.display_name)
 
     def get_mods(self) -> list[Mod]:
+        """
+        Get list of fetched & filtered mods. Does not re-fetch from repos.
+        :return: List of fetched & filtered mods.
+        """
         mods = list(self.mods.values())
 
         mods_filtered_tags = self.apply_filter_tags(mods)
