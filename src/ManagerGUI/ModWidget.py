@@ -1,4 +1,4 @@
-from src.ManagerGUI.DownloaderThread import DownloaderThread
+from src.ManagerGUI.GenericThread import GenericThread
 from src.Mod.Mod import Mod
 
 from PySide2 import QtCore, QtWidgets, QtGui
@@ -8,13 +8,14 @@ class ModWidget(QtWidgets.QFrame):
     """
     Framed widget that holds and displays a Mod's info for use in Qt's list widget.
     """
-    def __init__(self, mod: Mod, parent=None):
+    def __init__(self, mod: Mod, mod_manager, parent=None):
         super().__init__(parent)
         self.setFrameStyle(QtCore.Qt.SolidLine)
 
         self.mod = mod
+        self.mod_manager = mod_manager
 
-        self.downloader_thread = DownloaderThread(self)
+        self.downloader_thread = GenericThread(self, lambda: self.mod_manager.download_mod(self.mod.id))
 
         self.setToolTip(self.mod.display_name)
 
@@ -28,6 +29,8 @@ class ModWidget(QtWidgets.QFrame):
         """
         Sets up the widget representation; adding the labels and download button.
         """
+
+
         layout = QtWidgets.QGridLayout()
 
         download_button = QtWidgets.QPushButton(self)

@@ -1,4 +1,5 @@
 from src.ManagerGUI.InstalledModWidget import InstalledModWidget
+from src.ManagerGUI.GenericThread import GenericThread
 from src.ModManager.ModManager import ModManager
 from src.ManagerGUI.ModWidget import ModWidget
 from src.Logger.Loggable import Loggable
@@ -15,6 +16,13 @@ class Popup(QtWidgets.QWidget):
     Simple text popup.
     """
     def __init__(self, message):
+        """
+        Sets its content to the given message, and enabled rich text representation as well as opening links through the browser.
+        Shows itself when it's created, so no further action is necessary after creating this object.
+        (Make sure the object doesn't go out of scope, otherwise it'll instantly close)
+        # TODO: Replace with built-in QT Dialogue?
+        :param message: Message to display.
+        """
         super().__init__()
         label = QtWidgets.QLabel(message)
         label.setTextFormat(QtCore.Qt.RichText)
@@ -31,25 +39,16 @@ class Popup(QtWidgets.QWidget):
         self.show()
 
 
-class GenericThread(QtCore.QThread):
-    def __init__(self, parent, func):
-        super(GenericThread, self).__init__(parent)
-        self.locked = False
-        self.func = func
-
-    def run(self):
-        if not self.locked:
-            self.locked = True
-            self.func()
-            self.locked = False
-
-
 class ManagerGUI(Loggable, QtWidgets.QMainWindow):
     """
     Main GUI window.
     Holds all widgets.
     """
     def __init__(self, logger: Logger, config: Config = Config()):
+        """
+        :param logger: Logger class to use to handle the logs
+        :param config: Config object to use as config. Optional.
+        """
         super().__init__(logger=logger)
         self.setWindowTitle("Sailwind Mod Manager")
         self.central_widget = None
@@ -60,21 +59,22 @@ class ManagerGUI(Loggable, QtWidgets.QMainWindow):
 
         self.setup_window()
 
-    def closeEvent(self, QCloseEvent):
+    def closeEvent(self, QCloseEvent) -> None:
         """
+        Called when the window closes.
         Close all remaining popups when the window is closed.
         """
         for popup in self.popups:
             popup.close()
 
-    def popup(self, message):
+    def popup(self, message: str) -> None:
         """
         Create and show a popup dialogue.
         :param message: The message to display.
         """
         self.popups.append(Popup(message))
 
-    def setup_window(self):
+    def setup_window(self) -> None:
         """
         Sets up the window.
         Initialises the necessary widgets.
@@ -140,6 +140,9 @@ class InstallationTab(QtWidgets.QWidget):
 
 
 class InstalledModListContainer(QtWidgets.QFrame):
+    """
+    Widget that contains Installed Mod List related widgets.
+    """
     def __init__(self,  parent, mod_manager: ModManager):
         super().__init__(parent)
         self.setFrameStyle(QtCore.Qt.SolidLine)
@@ -153,6 +156,9 @@ class InstalledModListContainer(QtWidgets.QFrame):
 
 
 class InstalledModList(QtWidgets.QListWidget):
+    """
+    List that contains and represents installed mods.
+    """
     def __init__(self,  parent, mod_manager: ModManager):
         super().__init__(parent)
         self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.MinimumExpanding))
@@ -164,20 +170,20 @@ class InstalledModList(QtWidgets.QListWidget):
 
         self.refresh_list()
 
-    def current_item_changed(self):
+    def current_item_changed(self) -> None:
         """
         Execute when the selected item has changed in the Mod List widget.
         """
         if self.currentItem() is not None:
             self.installation_tab.mod_display.update_display(self.itemWidget(self.currentItem()))
 
-    def clear_list(self):
+    def clear_list(self) -> None:
         """
         Clears the list.
         """
         self.clear()
 
-    def add_item(self, mod: Mod):
+    def add_item(self, mod: Mod) -> None:
         """
         Adds an item to the list, and then sets that item to display the given ModEntry widget.
         :param mod: The mod to list.
@@ -188,7 +194,7 @@ class InstalledModList(QtWidgets.QListWidget):
         self.addItem(item)
         self.setItemWidget(item, mod_widget)
 
-    def fill_list(self, mods: list[Mod]):
+    def fill_list(self, mods: list[Mod]) -> None:
         """
         Fills the mod list with mods.
         :param mods: List of mods to use.
@@ -197,11 +203,17 @@ class InstalledModList(QtWidgets.QListWidget):
         for mod in mods:
             self.add_item(mod)
 
-    def refresh_list(self):
+    def refresh_list(self) -> None:
+        """
+        Refresh the list.
+        """
         self.fill_list(self.mod_manager.get_installed_mods())
 
 
 class InstallMiscMenu(QtWidgets.QFrame):
+    """
+    Misc menu widget with buttons related to the installation tab.
+    """
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setFrameStyle(QtCore.Qt.SolidLine)
@@ -209,7 +221,7 @@ class InstallMiscMenu(QtWidgets.QFrame):
 
         self.setup_widget()
 
-    def setup_widget(self):
+    def setup_widget(self) -> None:
         """
         Sets up the widget.
         Initialises misc buttons and the like.
@@ -253,8 +265,7 @@ class DownloadTab(QtWidgets.QWidget):
 
         self.setup_widget()
 
-    def setup_widget(self):
-
+    def setup_widget(self) -> None:
         layout = QtWidgets.QGridLayout(self)
 
         self.mod_display = ModDisplay(self)
@@ -286,24 +297,30 @@ class ModImage(QtWidgets.QLabel):
         self.setMinimumSize(1, 1)
         self.set_placeholder()
 
-    def resizeEvent(self, QResizeEvent):
+    def resizeEvent(self, QResizeEvent) -> None:
+        """
+        Called whenever the window is resized.
+        """
         self.__resize()
 
-    def __resize(self):
+    def __resize(self) -> None:
+        """
+        Private function to resize the mod's image.
+        """
         self.setPixmap(self.pixmap().scaled(self.width(), self.height(), QtCore.Qt.KeepAspectRatio, QtGui.Qt.SmoothTransformation))
 
-    def set_placeholder(self):
+    def set_placeholder(self) -> None:
         """
         Sets image using placeholder.
         """
         self.setPixmap(QtGui.QPixmap("./data/placeholder-image.png"))
 
-    def set_image(self, image):
+    def set_image(self, image) -> None:
         """
         Sets the image based on the raw bytes given.
         Copy is made since the image was otherwise lost after being read.
         TODO: Can probably be done cleaner.
-        :param image: The raw bytes to use.
+        :param image: The raw bytes to use for the image.
         """
         if image is not None:
             self.setPixmap(QtGui.QPixmap(QtGui.QImage.fromData(QtCore.QByteArray(copy(image)))))
@@ -321,7 +338,7 @@ class ModInfo(QtWidgets.QTextEdit):
         self.setReadOnly(True)
         self.setAcceptRichText(True)
 
-    def set_text(self, text: str):
+    def set_text(self, text: str) -> None:
         """
         Sets the text displayed in the panel.
         :param text: Text to display.
@@ -330,6 +347,9 @@ class ModInfo(QtWidgets.QTextEdit):
 
 
 class ModDisplay(QtWidgets.QFrame):
+    """
+    Framed widget that contains widgets that display information on the selected mod.
+    """
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.MinimumExpanding))
@@ -340,7 +360,7 @@ class ModDisplay(QtWidgets.QFrame):
 
         self.setup_widget()
 
-    def setup_widget(self):
+    def setup_widget(self) -> None:
         """
         Sets up the widget.
         Initialises the mod image and info widgets.
@@ -358,7 +378,7 @@ class ModDisplay(QtWidgets.QFrame):
 
         self.setLayout(layout)
 
-    def update_display(self, mod: ModWidget):
+    def update_display(self, mod: ModWidget) -> None:
         """
         Update the Mod Display Image & Info widgets with information from the provided mod widget.
         :param mod: The mod to display.
@@ -368,6 +388,9 @@ class ModDisplay(QtWidgets.QFrame):
 
 
 class ModListContainer(QtWidgets.QFrame):
+    """
+    Widget that contains Mod List related widgets.
+    """
     def __init__(self,  parent, mod_manager: ModManager):
         super().__init__(parent)
         self.setFrameStyle(QtCore.Qt.SolidLine)
@@ -383,6 +406,9 @@ class ModListContainer(QtWidgets.QFrame):
 
 
 class ModListSearch(QtWidgets.QWidget):
+    """
+    Widget that contains widgets and functionality related to the Mod List's search.
+    """
     def __init__(self,  parent, mod_manager: ModManager):
         super().__init__(parent)
         self.mod_manager = mod_manager
@@ -403,25 +429,34 @@ class ModListSearch(QtWidgets.QWidget):
 
         self.setLayout(layout)
 
-    def execute_search(self):
+    def execute_search(self) -> None:
+        """
+        Executes the search by applying the search filter to the Mod Manager and refresh the Mod List.
+        """
         self.mod_manager.set_filter_search(self.search_bar.text())
         self.download_tab.mod_list.list.refresh_list()
 
 
 class ModListSearchBar(QtWidgets.QLineEdit):
+    """
+    Mod List's search bar.
+    """
     def __init__(self,  parent):
         super().__init__(parent)
         self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
     def keyPressEvent(self, arg__1) -> None:
+        """
+        Executed when a key press is detected in the search bar.
+        """
         super(ModListSearchBar, self).keyPressEvent(arg__1)
-        # if arg__1.nativeVirtualKey() == 13 or self.text() == "":
         self.parent().execute_search()
 
 
 class ModListSearchButton(QtWidgets.QPushButton):
     """
-    Unused
+    Unused since the Search Bar now triggers the execute search function on any key press.
+    Used to be a button that executes the search.
     """
     def __init__(self,  parent, mod_manager: ModManager):
         super().__init__(parent)
@@ -439,6 +474,9 @@ class ModListSearchButton(QtWidgets.QPushButton):
 
 
 class ModList(QtWidgets.QListWidget):
+    """
+    List that contains and represents mods available in the configured central mod repositories.
+    """
     def __init__(self,  parent, mod_manager: ModManager):
         super().__init__(parent)
         self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.MinimumExpanding))
@@ -453,27 +491,27 @@ class ModList(QtWidgets.QListWidget):
 
         self.threaded_refetch_list()
 
-    def current_item_changed(self):
+    def current_item_changed(self) -> None:
         """
         Execute when the selected item has changed in the Mod List widget.
         """
         if self.currentItem() is not None:
             self.download_tab.mod_display.update_display(self.itemWidget(self.currentItem()))
 
-    def refetch_list(self):
+    def refetch_list(self) -> None:
         """
-        Refresh the mod list.
+        Refetch the mod list.
         """
         self.rate_limited = not self.mod_manager.fetch_info()
 
-    def threaded_refetch_list(self):
+    def threaded_refetch_list(self) -> None:
         """
         Refetch the mod list using the refetcher thread, preventing it from blocking the main thread.
         """
         if not self.refetcher_thread.isRunning():
             self.refetcher_thread.start()
 
-    def thread_finished(self):
+    def thread_finished(self) -> None:
         """
         Called when the refresher thread is finished.
         """
@@ -482,24 +520,24 @@ class ModList(QtWidgets.QListWidget):
             self.main_window.popup("Error 403.<br>Github has rate limited you for refreshing too often.<br>To circumvent this, you'll need to use a Github token.<br>My apologies for this!")
             self.rate_limited = False
 
-    def clear_list(self):
+    def clear_list(self) -> None:
         """
         Clears the list.
         """
         self.clear()
 
-    def add_item(self, mod: Mod):
+    def add_item(self, mod: Mod) -> None:
         """
         Adds an item to the list, and then sets that item to display the given ModEntry widget.
         :param mod: The mod to list.
         """
         item = QtWidgets.QListWidgetItem()
-        mod_widget = ModWidget(mod=mod)
+        mod_widget = ModWidget(mod=mod, parent=self, mod_manager=self.mod_manager)
         item.setSizeHint(mod_widget.sizeHint())
         self.addItem(item)
         self.setItemWidget(item, mod_widget)
 
-    def fill_list(self, mods: list[Mod]):
+    def fill_list(self, mods: list[Mod]) -> None:
         """
         Fills the mod list with mods.
         :param mods: List of mods to use.
@@ -508,11 +546,17 @@ class ModList(QtWidgets.QListWidget):
         for mod in mods:
             self.add_item(mod)
 
-    def refresh_list(self):
+    def refresh_list(self) -> None:
+        """
+        Refresh the mod list without refetching all entries.
+        """
         self.fill_list(self.mod_manager.get_mods())
 
 
 class MiscMenu(QtWidgets.QFrame):
+    """
+    Misc menu widget with buttons related to the downloads tab.
+    """
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setFrameStyle(QtCore.Qt.SolidLine)
@@ -520,7 +564,7 @@ class MiscMenu(QtWidgets.QFrame):
 
         self.setup_widget()
 
-    def setup_widget(self):
+    def setup_widget(self) -> None:
         """
         Sets up the widget.
         Initialises misc buttons and the like.
