@@ -42,7 +42,7 @@ class InstalledModWidget(QtWidgets.QFrame):
         layout.addWidget(name_label, 0, 0, 1, 2)
         layout.addWidget(tags_label, 1, 0, 1, 2)
         layout.addWidget(update_button, 2, 0, 1, 1)
-        layout.addWidget(uninstall_button, 2, 0, 1, 1)
+        layout.addWidget(uninstall_button, 2, 1, 1, 1)
 
         self.setLayout(layout)
 
