@@ -1,3 +1,4 @@
+from src.ManagerGUI.InstalledModWidget import InstalledModWidget
 from src.ModManager.ModManager import ModManager
 from src.ManagerGUI.ModWidget import ModWidget
 from src.Logger.Loggable import Loggable
@@ -30,15 +31,16 @@ class Popup(QtWidgets.QWidget):
         self.show()
 
 
-class RefetcherThread(QtCore.QThread):
-    def __init__(self, parent=None):
-        super(RefetcherThread, self).__init__(parent)
+class GenericThread(QtCore.QThread):
+    def __init__(self, parent, func):
+        super(GenericThread, self).__init__(parent)
         self.locked = False
+        self.func = func
 
     def run(self):
         if not self.locked:
             self.locked = True
-            self.parent().refetch_list()
+            self.func()
             self.locked = False
 
 
@@ -97,7 +99,144 @@ class ManagerTabWidget(QtWidgets.QTabWidget):
         Initialises the necessary tabs and adds them to the tab widget.
         """
 
-        self.addTab(DownloadTab(self, self.mod_manager), "Download Tab")
+        self.addTab(DownloadTab(self, self.mod_manager), "Download Mods")
+        self.addTab(InstallationTab(self, self.mod_manager), "Installed Mods")
+
+
+# Installation Tab
+
+
+class InstallationTab(QtWidgets.QWidget):
+    """
+    A tab that holds installation-related widgets.
+    """
+    def __init__(self, parent, mod_manager: ModManager):
+        super().__init__(parent)
+        self.mod_manager = mod_manager
+
+        self.mod_display = None
+        self.mod_list = None
+        self.installation_misc_menu = None
+
+        self.setup_widget()
+
+    def setup_widget(self):
+
+        layout = QtWidgets.QGridLayout(self)
+
+        self.mod_display = ModDisplay(self)
+        self.mod_list = InstalledModListContainer(self, mod_manager=self.mod_manager)
+        self.installation_misc_menu = InstallMiscMenu(self)
+
+        self.mod_display.setMinimumSize(self.mod_display.sizeHint())
+        self.mod_list.setMinimumSize(self.mod_list.sizeHint())
+        self.installation_misc_menu.setMinimumSize(self.installation_misc_menu.sizeHint())
+
+        layout.addWidget(self.mod_list, 0, 0, 5, 1)
+        layout.addWidget(self.installation_misc_menu, 5, 0, 1, 1)
+        layout.addWidget(self.mod_display, 0, 1, 6, 1)
+
+        self.setLayout(layout)
+
+
+class InstalledModListContainer(QtWidgets.QFrame):
+    def __init__(self,  parent, mod_manager: ModManager):
+        super().__init__(parent)
+        self.setFrameStyle(QtCore.Qt.SolidLine)
+        layout = QtWidgets.QVBoxLayout()
+
+        self.list = InstalledModList(self, mod_manager)
+
+        layout.addWidget(self.list, stretch=1)
+
+        self.setLayout(layout)
+
+
+class InstalledModList(QtWidgets.QListWidget):
+    def __init__(self,  parent, mod_manager: ModManager):
+        super().__init__(parent)
+        self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.MinimumExpanding))
+        self.mod_manager = mod_manager
+
+        self.installation_tab = self.parent().parent()
+
+        self.currentItemChanged.connect(self.current_item_changed)
+
+        self.refresh_list()
+
+    def current_item_changed(self):
+        """
+        Execute when the selected item has changed in the Mod List widget.
+        """
+        if self.currentItem() is not None:
+            self.installation_tab.mod_display.update_display(self.itemWidget(self.currentItem()))
+
+    def clear_list(self):
+        """
+        Clears the list.
+        """
+        self.clear()
+
+    def add_item(self, mod: Mod):
+        """
+        Adds an item to the list, and then sets that item to display the given ModEntry widget.
+        :param mod: The mod to list.
+        """
+        item = QtWidgets.QListWidgetItem()
+        mod_widget = InstalledModWidget(mod=mod)
+        item.setSizeHint(mod_widget.sizeHint())
+        self.addItem(item)
+        self.setItemWidget(item, mod_widget)
+
+    def fill_list(self, mods: list[Mod]):
+        """
+        Fills the mod list with mods.
+        :param mods: List of mods to use.
+        """
+        self.clear_list()
+        for mod in mods:
+            self.add_item(mod)
+
+    def refresh_list(self):
+        self.fill_list(self.mod_manager.get_installed_mods())
+
+
+class InstallMiscMenu(QtWidgets.QFrame):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setFrameStyle(QtCore.Qt.SolidLine)
+        self.main_window = self.parent().parent().parent()
+
+        self.setup_widget()
+
+    def setup_widget(self):
+        """
+        Sets up the widget.
+        Initialises misc buttons and the like.
+        """
+        layout = QtWidgets.QGridLayout()
+
+        refresh_button = QtWidgets.QPushButton(self)
+        refresh_button.setText("Refresh")
+
+        about_button = QtWidgets.QPushButton(self)
+        about_button.setText("About")
+
+        label = QtWidgets.QLabel(self)
+        label.setText("See the config.yaml file in the data folder for settings.\nCreated by Max.")
+        label.setAlignment(QtCore.Qt.AlignCenter)
+
+        refresh_button.clicked.connect(lambda: self.parent().mod_list.list.refresh_list())
+        about_button.clicked.connect(lambda: self.main_window.popup("For more information, feel free to contact me on the Sailwind Discord server!<br>This tool was written in Python 3.9, using Qt as graphics library.<br>The mod repository can be found <a href=\"https://github.com/MaxWasUnavailable/SailwindModRepository\">here</a>.<br>The tool's source code can be found <a href=\"https://github.com/MaxWasUnavailable/SailwindModManager\">here</a>."))
+
+        layout.addWidget(refresh_button, 0, 0)
+        layout.addWidget(about_button, 0, 1)
+        layout.addWidget(label, 1, 0, 1, 2)
+
+        self.setLayout(layout)
+
+
+# Download Tab
 
 
 class DownloadTab(QtWidgets.QWidget):
@@ -305,7 +444,7 @@ class ModList(QtWidgets.QListWidget):
         self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.MinimumExpanding))
         self.mod_manager = mod_manager
 
-        self.refetcher_thread = RefetcherThread(self)
+        self.refetcher_thread = GenericThread(self, self.refetch_list)
         self.download_tab = self.parent().parent()
         self.rate_limited = False
 
@@ -329,7 +468,7 @@ class ModList(QtWidgets.QListWidget):
 
     def threaded_refetch_list(self):
         """
-        Refresh the mod list using the refresher thread, preventing it from blocking the main thread.
+        Refetch the mod list using the refetcher thread, preventing it from blocking the main thread.
         """
         if not self.refetcher_thread.isRunning():
             self.refetcher_thread.start()
@@ -376,7 +515,6 @@ class ModList(QtWidgets.QListWidget):
 class MiscMenu(QtWidgets.QFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
-        # self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.MinimumExpanding))
         self.setFrameStyle(QtCore.Qt.SolidLine)
         self.main_window = self.parent().parent().parent()
 
