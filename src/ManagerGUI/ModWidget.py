@@ -87,7 +87,7 @@ class ModWidget(QtWidgets.QFrame):
         self.context_actions.append(QtWidgets.QAction(text="Force download"))
         self.context_actions[-1].triggered.connect(self.threaded_download)
         self.context_actions.append(QtWidgets.QAction(text="Install"))
-        self.context_actions[-1].triggered.connect(lambda x: self.mod_manager.install_mod(self.mod.id))
+        self.context_actions[-1].triggered.connect(self.install_mod)
 
         self.context_menu = QtWidgets.QMenu()
         self.context_menu.addActions(self.context_actions)
@@ -159,3 +159,7 @@ class ModWidget(QtWidgets.QFrame):
 
     def contextMenuEvent(self, event: QtGui.QContextMenuEvent) -> None:
         self.context_menu.popup(QtGui.QCursor.pos())
+
+    def install_mod(self):
+        self.mod_manager.install_mod(self.mod.id)
+        self.parent().parent().refresh_installed_list()

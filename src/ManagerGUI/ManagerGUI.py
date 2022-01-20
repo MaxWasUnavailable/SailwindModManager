@@ -91,6 +91,9 @@ class ManagerTabWidget(QtWidgets.QTabWidget):
         super().__init__(parent)
         self.mod_manager = mod_manager
 
+        self.download_tab = None
+        self.installation_tab = None
+
         self.setup_tabs()
 
     def setup_tabs(self):
@@ -99,8 +102,13 @@ class ManagerTabWidget(QtWidgets.QTabWidget):
         Initialises the necessary tabs and adds them to the tab widget.
         """
 
-        self.addTab(DownloadTab(self, self.mod_manager), "Download Mods")
-        self.addTab(InstallationTab(self, self.mod_manager), "Installed Mods")
+        self.download_tab = DownloadTab(self, self.mod_manager)
+
+        self.addTab(self.download_tab, "Download Mods")
+
+        self.installation_tab = InstallationTab(self, self.mod_manager)
+
+        self.addTab(self.installation_tab, "Installed Mods")
 
 
 # Installation Tab
@@ -555,6 +563,13 @@ class ModList(QtWidgets.QListWidget):
         Refresh the mod list without refetching all entries.
         """
         self.fill_list(self.mod_manager.get_mods())
+
+    def refresh_installed_list(self) -> None:
+        """
+        Force a refresh for the install list.
+        (Useful, for example, if you install a mod)
+        """
+        self.parent().parent().parent().parent().installation_tab.mod_list.list.refresh_list()
 
 
 class MiscMenu(QtWidgets.QFrame):
