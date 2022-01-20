@@ -36,6 +36,7 @@ class ModWidget(QtWidgets.QFrame):
         layout = QtWidgets.QGridLayout()
 
         self.downloader_thread.finished.connect(self.thread_finished)
+        self.updater_thread.finished.connect(self.thread_finished)
 
         self.download_update_button = QtWidgets.QPushButton(self)
         name_label = QtWidgets.QLabel(self)
