@@ -72,6 +72,9 @@ class Mod:
             if self.version[i] < target_mod.version[i]:
                 return False
 
+        if len(target_mod.version) > len(self.version):
+            return False
+
         return True
 
 
