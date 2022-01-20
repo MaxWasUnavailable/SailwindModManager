@@ -69,10 +69,10 @@ class Mod:
         :return: True if newer, False if older
         """
         for i in range(min(len(self.version), len(target_mod.version))):
-            if self.version[i] > target_mod.version[i]:
-                return True
+            if self.version[i] < target_mod.version[i]:
+                return False
 
-        return False
+        return True
 
 
 if __name__ == '__main__':
