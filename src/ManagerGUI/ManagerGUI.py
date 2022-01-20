@@ -189,7 +189,7 @@ class InstalledModList(QtWidgets.QListWidget):
         :param mod: The mod to list.
         """
         item = QtWidgets.QListWidgetItem()
-        mod_widget = InstalledModWidget(mod=mod)
+        mod_widget = InstalledModWidget(mod=mod, mod_manager=self.mod_manager)
         item.setSizeHint(mod_widget.sizeHint())
         self.addItem(item)
         self.setItemWidget(item, mod_widget)
@@ -203,11 +203,11 @@ class InstalledModList(QtWidgets.QListWidget):
         for mod in mods:
             self.add_item(mod)
 
-    def refresh_list(self) -> None:
+    def refresh_list(self, refresh: bool = False) -> None:
         """
         Refresh the list.
         """
-        self.fill_list(self.mod_manager.get_installed_mods())
+        self.fill_list(self.mod_manager.get_installed_mods(refresh=refresh))
 
 
 class InstallMiscMenu(QtWidgets.QFrame):
@@ -238,7 +238,7 @@ class InstallMiscMenu(QtWidgets.QFrame):
         label.setText("See the config.yaml file in the data folder for settings.\nCreated by Max.")
         label.setAlignment(QtCore.Qt.AlignCenter)
 
-        refresh_button.clicked.connect(lambda: self.parent().mod_list.list.refresh_list())
+        refresh_button.clicked.connect(lambda: self.parent().mod_list.list.refresh_list(refresh=True))
         about_button.clicked.connect(lambda: self.main_window.popup("For more information, feel free to contact me on the Sailwind Discord server!<br>This tool was written in Python 3.9, using Qt as graphics library.<br>The mod repository can be found <a href=\"https://github.com/MaxWasUnavailable/SailwindModRepository\">here</a>.<br>The tool's source code can be found <a href=\"https://github.com/MaxWasUnavailable/SailwindModManager\">here</a>."))
 
         layout.addWidget(refresh_button, 0, 0)
@@ -383,7 +383,11 @@ class ModDisplay(QtWidgets.QFrame):
         Update the Mod Display Image & Info widgets with information from the provided mod widget.
         :param mod: The mod to display.
         """
-        self.mod_image.set_image(mod.mod.image)
+        try:
+            self.mod_image.set_image(mod.mod.image)
+        except Exception as e:
+            # TODO: Log error
+            self.mod_image.set_placeholder()
         self.mod_info.set_text(mod.get_display_text())
 
 
