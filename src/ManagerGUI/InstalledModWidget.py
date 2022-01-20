@@ -7,7 +7,7 @@ class InstalledModWidget(QtWidgets.QFrame):
     """
     Framed widget that holds and displays an installed Mod's info for use in Qt's list widget.
     """
-    def __init__(self, mod: Mod, parent=None):
+    def __init__(self, mod: Mod, mod_manager, parent=None):
         """
         :param mod: Mod to base the widget off of.
         :param parent: Parent Qt Object/Widget
@@ -16,6 +16,10 @@ class InstalledModWidget(QtWidgets.QFrame):
         self.setFrameStyle(QtCore.Qt.SolidLine)
 
         self.mod = mod
+        self.mod_manager = mod_manager
+
+        self.update_button = None
+        self.uninstall_button = None
 
         self.setToolTip(self.mod.display_name)
 
@@ -27,11 +31,11 @@ class InstalledModWidget(QtWidgets.QFrame):
         """
         layout = QtWidgets.QGridLayout()
 
-        update_button = QtWidgets.QPushButton(self)
-        update_button.setText("Update")
-        update_button.setDisabled(True)
-        uninstall_button = QtWidgets.QPushButton(self)
-        uninstall_button.setText("Uninstall")
+        self.update_button = QtWidgets.QPushButton(self)
+        self.update_button.setText("Update")
+        self.update_button.setDisabled(True)
+        self.uninstall_button = QtWidgets.QPushButton(self)
+        self.uninstall_button.setText("Uninstall")
 
         name_label = QtWidgets.QLabel(self)
         name_label.setText(self.mod.display_name)
@@ -40,15 +44,23 @@ class InstalledModWidget(QtWidgets.QFrame):
         tags_label.setStyleSheet("QLabel {color: #006994}")
         tags_label.setText(str(", ".join(self.mod.tags)))
 
-        update_button.clicked.connect(lambda: self.parent().mod_manager.update_mod(self.mod.id))
-        uninstall_button.clicked.connect(lambda: self.parent().mod_manager.uninstall_mod(self.mod.id))
+        self.update_button.clicked.connect(self.update_mod)
+        self.uninstall_button.clicked.connect(self.uninstall_mod)
 
         layout.addWidget(name_label, 0, 0, 1, 2)
         layout.addWidget(tags_label, 1, 0, 1, 2)
-        layout.addWidget(update_button, 2, 0, 1, 1)
-        layout.addWidget(uninstall_button, 2, 1, 1, 1)
+        layout.addWidget(self.update_button, 2, 0, 1, 1)
+        layout.addWidget(self.uninstall_button, 2, 1, 1, 1)
 
         self.setLayout(layout)
+
+        self.refresh_buttons()
+
+    def refresh_buttons(self):
+        if self.mod.update_available:
+            self.update_button.setDisabled(False)
+        else:
+            self.update_button.setDisabled(True)
 
     def get_display_text(self) -> str:
         """
@@ -86,3 +98,15 @@ class InstalledModWidget(QtWidgets.QFrame):
             text += f"""<u>Home page:</u> {self.mod.home_page}"""
 
         return text
+
+    def uninstall_mod(self):
+        self.mod_manager.uninstall_mod(self.mod.id)
+        self.refresh_list()
+
+    def update_mod(self):
+        self.mod_manager.uninstall_mod(self.mod.id)
+        self.mod_manager.update_mod(self.mod.id, update_install=True)
+        self.refresh_list()
+
+    def refresh_list(self):
+        self.parent().parent().refresh_list()
