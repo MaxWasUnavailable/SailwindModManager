@@ -1,4 +1,5 @@
 github_access_token: ""
 downloads_directory: "./data/downloads/"
+game_directory: ""
 repository_ids:
   - "MaxWasUnavailable/SailwindModRepository"
