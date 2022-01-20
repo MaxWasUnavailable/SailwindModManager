@@ -80,12 +80,14 @@ class ModWidget(QtWidgets.QFrame):
             self.download_update_button.clicked.connect(lambda: self.threaded_update())
 
     def setup_context_menu(self) -> None:
-        self.context_actions.append(QtWidgets.QAction(text="Favourite"))
-        self.context_actions[-1].triggered.connect(self.favourite)
-        self.context_actions.append(QtWidgets.QAction(text="Set colour"))
-        self.context_actions[-1].triggered.connect(self.set_colour)
+        # self.context_actions.append(QtWidgets.QAction(text="Favourite"))
+        # self.context_actions[-1].triggered.connect(self.favourite)
+        # self.context_actions.append(QtWidgets.QAction(text="Set colour"))
+        # self.context_actions[-1].triggered.connect(self.set_colour)
         self.context_actions.append(QtWidgets.QAction(text="Force download"))
         self.context_actions[-1].triggered.connect(self.threaded_download)
+        self.context_actions.append(QtWidgets.QAction(text="Install"))
+        self.context_actions[-1].triggered.connect(lambda x: self.mod_manager.install_mod(self.mod.id))
 
         self.context_menu = QtWidgets.QMenu()
         self.context_menu.addActions(self.context_actions)
