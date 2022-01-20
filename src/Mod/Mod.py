@@ -27,8 +27,11 @@ class Mod:
     image: bytes = None
     modloader_required: bool = False
     additional_fields: dict = field(default_factory=dict)
+    downloaded_dir_path: str = None
+    installed_dir_path: str = None
+    update_available: bool = False
 
-    def download(self, path="./data/downloads/") -> bool:
+    def download(self, path: str = "./data/downloads/") -> bool:
         """
         Downloads mod to provided path directory.
         :param path: Directory to download to.
@@ -55,7 +58,21 @@ class Mod:
             file_to_save.write(requests.get(file['download_url']).content)
             file_to_save.close()
 
+        self.downloaded_dir_path = full_path
+
         return True
+
+    def compare_version(self, target_mod) -> bool:
+        """
+        Compares version between itself and target mod.
+        :param target_mod: Target mod to compare to
+        :return: True if newer, False if older
+        """
+        for i in range(min(len(self.version), len(target_mod.version))):
+            if self.version[i] > target_mod.version[i]:
+                return True
+
+        return False
 
 
 if __name__ == '__main__':
