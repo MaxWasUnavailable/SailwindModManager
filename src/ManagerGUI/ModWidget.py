@@ -151,8 +151,9 @@ class ModWidget(QtWidgets.QFrame):
         """
         Called when the downloader thread is finished.
         """
+        new_mod = self.mod_manager.get_mod(self.mod.id)
+        self.mod = new_mod or self.mod
         self.refresh_buttons()
 
     def contextMenuEvent(self, event: QtGui.QContextMenuEvent) -> None:
         self.context_menu.popup(QtGui.QCursor.pos())
-
