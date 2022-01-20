@@ -146,6 +146,15 @@ class ModManager(Loggable):
                         # If old entry had a download URL and new one doesn't, update new entry with old download URL.
                         self.mods[mod.id].download_url = existing_entry.download_url
 
+            # Special check to see if installed mod has an update available:
+            if installed:
+                downloaded_mod = self.mods.get(mod.id, None)
+                if downloaded_mod is not None:
+                    if downloaded_mod.downloaded_dir_path is not None:
+                        if not self.installed_mods[mod.id].compare_version(downloaded_mod):
+                            self.log(f"Update available for installed mod: {mod.id}")
+                            self.installed_mods[mod.id].update_available = True
+
     def fetch_info(self, second_attempt: bool = False) -> bool:
         """
         Fetches information on all mods from the configured github repositories.
@@ -460,7 +469,7 @@ class ModManager(Loggable):
             self.log("Could not uninstall mod since the installed path wasn't found. Please report this.")
             return False
 
-    def update_mod(self, mod_id: str, update_install: bool = True, download_first: bool = False) -> None:
+    def update_mod(self, mod_id: str, update_install: bool = True, download_first: bool = False) -> bool:
         """
         Update a mod.
         :param mod_id: Mod id of the mod to uninstall
@@ -473,6 +482,7 @@ class ModManager(Loggable):
             if download_first:
                 success = self.download_mod(mod_id)
             success = success and self.install_mod(mod_id)
+            self.__refresh_installed_mods()
 
         else:
             success = self.download_mod(mod_id)
