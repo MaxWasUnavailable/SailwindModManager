@@ -16,6 +16,9 @@ class ModWidget(QtWidgets.QFrame):
         self.mod_manager = mod_manager
 
         self.downloader_thread = GenericThread(self, lambda: self.mod_manager.download_mod(self.mod.id))
+        self.updater_thread = GenericThread(self, lambda: self.mod_manager.update_mod(self.mod.id))
+
+        self.download_update_button = None
 
         self.setToolTip(self.mod.display_name)
 
@@ -30,33 +33,58 @@ class ModWidget(QtWidgets.QFrame):
         Sets up the widget representation; adding the labels and download button.
         """
 
-
         layout = QtWidgets.QGridLayout()
 
-        download_button = QtWidgets.QPushButton(self)
-        download_button.setText("Download")
+        self.downloader_thread.finished.connect(self.thread_finished)
+
+        self.download_update_button = QtWidgets.QPushButton(self)
         name_label = QtWidgets.QLabel(self)
         name_label.setText(self.mod.display_name)
         tags_label = QtWidgets.QLabel(self)
         tags_label.setStyleSheet("QLabel {color: #006994}")
         tags_label.setText(str(", ".join(self.mod.tags)))
 
-        self.downloader_thread.finished.connect(self.thread_finished)
-        download_button.clicked.connect(lambda: self.threaded_download())
-        # TODO: replace with lambda call to mod manager through parent?
-        # Technically not necessary, though.
-
         layout.addWidget(name_label, 0, 0)
         layout.addWidget(tags_label, 1, 0)
-        layout.addWidget(download_button, 2, 0)
+        layout.addWidget(self.download_update_button, 2, 0)
+
+        self.refresh_buttons()
 
         self.setLayout(layout)
+
+    def refresh_buttons(self):
+        if self.mod.downloaded_dir_path is None:
+            self.download_update_button.setText("Download")
+            self.download_update_button.setDisabled(False)
+            self.download_update_button.setToolTip("")
+            try:
+                self.download_update_button.clicked.disconnect()
+            except Exception as e:
+                # TODO: Replace this with a check rather than a try-catch. Couldn't find proper Qt docs on how to check for existing connections that didn't look extremely messy itself.
+                pass
+            self.download_update_button.clicked.connect(lambda: self.threaded_download())
+        else:
+            self.download_update_button.setText("Update")
+            if not self.mod.update_available:
+                self.download_update_button.setDisabled(True)
+                self.download_update_button.setToolTip("You're up-to-date!")
+            else:
+                self.download_update_button.setDisabled(False)
+                self.download_update_button.setToolTip("Update available!")
+            try:
+                self.download_update_button.clicked.disconnect()
+            except Exception as e:
+                # TODO: Replace this with a check rather than a try-catch. Couldn't find proper Qt docs on how to check for existing connections that didn't look extremely messy itself.
+                pass
+            self.download_update_button.clicked.connect(lambda: self.threaded_update())
 
     def setup_context_menu(self) -> None:
         self.context_actions.append(QtWidgets.QAction(text="Favourite"))
         self.context_actions[-1].triggered.connect(self.favourite)
         self.context_actions.append(QtWidgets.QAction(text="Set colour"))
         self.context_actions[-1].triggered.connect(self.set_colour)
+        self.context_actions.append(QtWidgets.QAction(text="Force download"))
+        self.context_actions[-1].triggered.connect(self.threaded_download)
 
         self.context_menu = QtWidgets.QMenu()
         self.context_menu.addActions(self.context_actions)
@@ -111,11 +139,18 @@ class ModWidget(QtWidgets.QFrame):
         if not self.downloader_thread.isRunning():
             self.downloader_thread.start()
 
+    def threaded_update(self):
+        """
+        Update the mod using the updater thread, preventing it from blocking the main thread.
+        """
+        if not self.updater_thread.isRunning():
+            self.updater_thread.start()
+
     def thread_finished(self):
         """
         Called when the downloader thread is finished.
         """
-        pass
+        self.refresh_buttons()
 
     def contextMenuEvent(self, event: QtGui.QContextMenuEvent) -> None:
         self.context_menu.popup(QtGui.QCursor.pos())
