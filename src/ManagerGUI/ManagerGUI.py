@@ -114,9 +114,9 @@ class ManagerTabWidget(QtWidgets.QTabWidget):
 
         self.addTab(self.installation_tab, "Installed Mods")
 
-        self.save_manager_tab = SaveManagerTab(self, self.config)
-
-        self.addTab(self.save_manager_tab, "Save Manager")
+        # self.save_manager_tab = SaveManagerTab(self, self.config)
+        #
+        # self.addTab(self.save_manager_tab, "Save Manager")
 
         self.settings_tab = SettingsTab(self, self.config)
 
@@ -161,6 +161,8 @@ class SaveManagerWidget(QtWidgets.QFrame):
 
         self.setFrameStyle(QtCore.Qt.SolidLine)
         layout = QtWidgets.QVBoxLayout()
+
+        layout.addWidget(QtWidgets.QLabel("WORK IN PROGRESS", self))
 
         self.setLayout(layout)
 
@@ -676,11 +678,30 @@ class ModList(QtWidgets.QListWidget):
         self.refetcher_thread = GenericThread(self, self.refetch_list)
         self.download_tab = self.parent().parent()
         self.rate_limited = False
+        self.refreshing = False
+        self.refresh_icon = None
 
         self.refetcher_thread.finished.connect(self.thread_finished)
         self.currentItemChanged.connect(self.current_item_changed)
 
+        self.setup_widget()
+
         self.threaded_refetch_list()
+
+    def setup_widget(self):
+        self.refresh_icon = QtWidgets.QLabel(self)
+        try:
+            self.refresh_icon.setMovie(QtGui.QMovie("./data/loading.gif"))
+            self.refresh_icon.movie().start()
+        except Exception as e:
+            return
+
+
+    def refresh_refreshing(self) -> None:
+        if self.refreshing:
+            self.refresh_icon.show()
+        else:
+            self.refresh_icon.hide()
 
     def current_item_changed(self) -> None:
         """
@@ -700,6 +721,8 @@ class ModList(QtWidgets.QListWidget):
         Refetch the mod list using the refetcher thread, preventing it from blocking the main thread.
         """
         if not self.refetcher_thread.isRunning():
+            self.refreshing = True
+            self.refresh_refreshing()
             self.refetcher_thread.start()
 
     def thread_finished(self) -> None:
@@ -707,6 +730,8 @@ class ModList(QtWidgets.QListWidget):
         Called when the refresher thread is finished.
         """
         self.refresh_list()
+        self.refreshing = False
+        self.refresh_refreshing()
         if self.rate_limited:
             self.main_window.popup("Error 403.<br>Github has rate limited you for refreshing too often.<br>To circumvent this, you'll need to use a Github token.<br>My apologies for this!")
             self.rate_limited = False

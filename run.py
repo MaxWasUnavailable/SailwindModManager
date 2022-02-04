@@ -1,5 +1,4 @@
 from src.ManagerGUI.ManagerGUI import ManagerGUI
-from src.ModManager.ModManager import ModManager
 from src.Logger.Logger import Logger
 
 from PySide2.QtWidgets import QApplication
