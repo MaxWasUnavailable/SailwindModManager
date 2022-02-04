@@ -696,7 +696,6 @@ class ModList(QtWidgets.QListWidget):
         except Exception as e:
             return
 
-
     def refresh_refreshing(self) -> None:
         if self.refreshing:
             self.refresh_icon.show()

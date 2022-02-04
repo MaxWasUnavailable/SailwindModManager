@@ -18,7 +18,9 @@ class ModWidget(QtWidgets.QFrame):
         self.downloader_thread = GenericThread(self, lambda: self.mod_manager.download_mod(self.mod.id))
         self.updater_thread = GenericThread(self, lambda: self.mod_manager.update_mod(self.mod.id))
 
-        self.download_update_button = None
+        self.download_button = None
+        self.update_button = None
+        self.install_button = None
 
         self.setToolTip(self.mod.display_name)
 
@@ -38,16 +40,29 @@ class ModWidget(QtWidgets.QFrame):
         self.downloader_thread.finished.connect(self.thread_finished)
         self.updater_thread.finished.connect(self.thread_finished)
 
-        self.download_update_button = QtWidgets.QPushButton(self)
+        self.download_button = QtWidgets.QPushButton(self)
+        self.download_button.setText("Download")
+        self.download_button.clicked.connect(lambda: self.threaded_download())
+
+        self.update_button = QtWidgets.QPushButton(self)
+        self.update_button.setText("Update")
+        self.update_button.clicked.connect(lambda: self.threaded_update())
+
+        self.install_button = QtWidgets.QPushButton(self)
+        self.install_button.setText("Install")
+        self.install_button.clicked.connect(lambda: self.install_mod())
+
         name_label = QtWidgets.QLabel(self)
         name_label.setText(self.mod.display_name)
         tags_label = QtWidgets.QLabel(self)
         tags_label.setStyleSheet("QLabel {color: #006994}")
         tags_label.setText(str(", ".join(self.mod.tags)))
 
-        layout.addWidget(name_label, 0, 0)
-        layout.addWidget(tags_label, 1, 0)
-        layout.addWidget(self.download_update_button, 2, 0)
+        layout.addWidget(name_label, 0, 0, 1, 2)
+        layout.addWidget(tags_label, 1, 0, 1, 2)
+        layout.addWidget(self.download_button, 2, 0, 1, 2)
+        layout.addWidget(self.install_button, 2, 0, 1, 1)
+        layout.addWidget(self.update_button, 2, 1, 1, 1)
 
         self.refresh_buttons()
 
@@ -55,29 +70,19 @@ class ModWidget(QtWidgets.QFrame):
 
     def refresh_buttons(self):
         if self.mod.downloaded_dir_path is None:
-            self.download_update_button.setText("Download")
-            self.download_update_button.setDisabled(False)
-            self.download_update_button.setToolTip("")
-            try:
-                self.download_update_button.clicked.disconnect()
-            except Exception as e:
-                # TODO: Replace this with a check rather than a try-catch. Couldn't find proper Qt docs on how to check for existing connections that didn't look extremely messy itself.
-                pass
-            self.download_update_button.clicked.connect(lambda: self.threaded_download())
+            self.update_button.hide()
+            self.install_button.hide()
+            self.download_button.show()
         else:
-            self.download_update_button.setText("Update")
+            self.update_button.show()
+            self.install_button.show()
+            self.download_button.hide()
             if not self.mod.update_available:
-                self.download_update_button.setDisabled(True)
-                self.download_update_button.setToolTip("You're up-to-date!")
+                self.update_button.setDisabled(True)
+                self.update_button.setToolTip("You're up-to-date!")
             else:
-                self.download_update_button.setDisabled(False)
-                self.download_update_button.setToolTip("Update available!")
-            try:
-                self.download_update_button.clicked.disconnect()
-            except Exception as e:
-                # TODO: Replace this with a check rather than a try-catch. Couldn't find proper Qt docs on how to check for existing connections that didn't look extremely messy itself.
-                pass
-            self.download_update_button.clicked.connect(lambda: self.threaded_update())
+                self.update_button.setDisabled(False)
+                self.update_button.setToolTip("Update available!")
 
     def setup_context_menu(self) -> None:
         # self.context_actions.append(QtWidgets.QAction(text="Favourite"))
