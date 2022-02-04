@@ -509,7 +509,7 @@ class ModImage(QtWidgets.QLabel):
         """
         Sets image using placeholder.
         """
-        self.setPixmap(QtGui.QPixmap("./data/placeholder-image.png"))
+        self.setPixmap(QtGui.QPixmap("./data/graphics/placeholder-image.png"))
 
     def set_image(self, image) -> None:
         """
@@ -698,7 +698,7 @@ class ModList(QtWidgets.QListWidget):
     def setup_widget(self):
         self.refresh_icon = QtWidgets.QLabel(self)
         try:
-            self.refresh_icon.setMovie(QtGui.QMovie("./data/loading.gif"))
+            self.refresh_icon.setMovie(QtGui.QMovie("./data/graphics/loading.gif"))
             self.refresh_icon.movie().start()
         except Exception as e:
             return
