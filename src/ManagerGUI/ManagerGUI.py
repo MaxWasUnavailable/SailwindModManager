@@ -211,6 +211,7 @@ class SettingsEditor(QtWidgets.QFrame):
         self.github_access_token_field = None
         self.downloads_directory_field = None
         self.game_directory_field = None
+        self.game_version_field = None
         self.repository_ids_list = None
 
         self.setup_widget()
@@ -228,8 +229,12 @@ class SettingsEditor(QtWidgets.QFrame):
         self.game_directory_field.setToolTip("Game's directory.")
         self.game_directory_field.setText(self.config.config.get("game_directory", ""))
 
+        self.game_version_field = QtWidgets.QLineEdit(self)
+        self.game_version_field.setToolTip("Game's version. For now, this has to be manually set.")
+        self.game_version_field.setText(self.config.config.get("game_version", ""))
+
         self.repository_ids_list = QtWidgets.QLineEdit(self)
-        self.repository_ids_list.setToolTip("List of repositories to pull mods from. Do not touch if you don't know what you're doing.")
+        self.repository_ids_list.setToolTip("List of repositories to pull mods from. Do not touch if you don't know what you're doing. If in doubt, ask a Modder (or Max) on the official Discord.")
         self.repository_ids_list.setText(str(self.config.config.get("repository_ids", [])))
 
         layout = QtWidgets.QVBoxLayout()
@@ -237,6 +242,7 @@ class SettingsEditor(QtWidgets.QFrame):
         for field in [(self.github_access_token_field, 'Github Access Token:'),
                       (self.downloads_directory_field, 'Downloads Directory:'),
                       (self.game_directory_field, 'Game Directory:'),
+                      (self.game_version_field, 'Game Version:'),
                       (self.repository_ids_list, 'Repository IDs:')]:
 
             subwidget_layout = QtWidgets.QHBoxLayout()
@@ -262,6 +268,7 @@ class SettingsEditor(QtWidgets.QFrame):
         self.config.config["downloads_directory"] = self.downloads_directory_field.text()
         self.config.config["game_directory"] = self.game_directory_field.text()
         self.config.config["repository_ids"] = literal_eval(self.repository_ids_list.text())
+        self.config.config["game_version"] = self.game_version_field.text()
         self.config.save_config()
 
 
@@ -424,7 +431,7 @@ class InstallMiscMenu(QtWidgets.QFrame):
         about_button.setText("About")
 
         label = QtWidgets.QLabel(self)
-        label.setText("See the config.yaml file in the data folder for settings.\nCreated by Max.")
+        label.setText("Created by Max.")
         label.setAlignment(QtCore.Qt.AlignCenter)
 
         refresh_button.clicked.connect(lambda: self.parent().mod_list.list.refresh_list(refresh=True))
@@ -800,7 +807,7 @@ class MiscMenu(QtWidgets.QFrame):
         about_button.setText("About")
 
         label = QtWidgets.QLabel(self)
-        label.setText("See the config.yaml file in the data folder for settings.\nCreated by Max.")
+        label.setText("Created by Max.")
         label.setAlignment(QtCore.Qt.AlignCenter)
 
         discord_button.clicked.connect(lambda: self.main_window.popup("""<a href=\"https://discord.gg/msuBMFrpYg\">https://discord.gg/msuBMFrpYg</a>"""))
