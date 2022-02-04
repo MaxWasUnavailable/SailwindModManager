@@ -3,3 +3,4 @@ downloads_directory: "./data/downloads/"
 game_directory: ""
 repository_ids:
   - "MaxWasUnavailable/SailwindModRepository"
+game_version: "0.16.2"
