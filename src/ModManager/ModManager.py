@@ -212,7 +212,7 @@ class ModManager(Loggable):
         self.log(f"Attempting to download mod: \"{mod_id}\"")
         mod = self.mods.get(mod_id, None)
 
-        if mod is None:
+        if mod in [None, ""]:
             self.log("Mod not found. Aborting download.")
             return False
 
@@ -417,17 +417,17 @@ class ModManager(Loggable):
         """
         installed_dir = self.config.config.get("game_directory", None)
 
-        if installed_dir is None:
+        if installed_dir in [None, ""]:
             self.log("Game installation directory was not specified. Please check your configuration file.")
             return False
 
         mod_to_install = self.mods.get(mod_id, None)
-        if mod_to_install is None:
+        if mod_to_install in [None, ""]:
             self.log("Could not find mod to install since it wasn't found in the mod list.")
             return False
 
         mod_downloaded_dir = mod_to_install.downloaded_dir_path
-        if mod_downloaded_dir is None:
+        if mod_downloaded_dir in [None, ""]:
             self.log("Could not install mod since it wasn't downloaded.")
             return False
 
@@ -435,7 +435,7 @@ class ModManager(Loggable):
             self.log("Could not install mod since it wasn't downloaded. Please report this.")
             return False
 
-        if mod_to_install.installed_dir_path is not None:
+        if mod_to_install.installed_dir_path not in [None, ""]:
             if os.path.exists(mod_to_install.installed_dir_path):
                 self.log("Mod is already installed. Please ensure that there are no leftover files of this mod in the mods directory. Please report this.")
                 return False

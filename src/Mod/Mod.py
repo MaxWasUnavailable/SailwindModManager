@@ -42,6 +42,9 @@ class Mod:
         if len(parsed_url) == 0:
             return False
 
+        if path in [None, ""]:
+            return False
+
         if not exists(path):
             mkdir(path)
 
