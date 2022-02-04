@@ -21,6 +21,7 @@ class ModWidget(QtWidgets.QFrame):
         self.download_button = None
         self.update_button = None
         self.install_button = None
+        self.warning_icon = None
 
         self.setToolTip(self.mod.display_name)
 
@@ -52,13 +53,28 @@ class ModWidget(QtWidgets.QFrame):
         self.install_button.setText("Install")
         self.install_button.clicked.connect(lambda: self.install_mod())
 
+        self.warning_icon = QtWidgets.QLabel(self)
+        self.warning_icon.setPixmap(QtGui.QPixmap("./data/graphics/outdated.png"))
+        if self.mod.game_version in [None, ""]:
+            self.warning_icon.setToolTip("This mod does not have a compatible game version set, and as such might not work for this version.")
+        else:
+            self.warning_icon.setToolTip("This mod was not made for this version and might not work properly.")
+
+        if self.mod.compatible_game_version:
+            self.warning_icon.hide()
+
         name_label = QtWidgets.QLabel(self)
         name_label.setText(self.mod.display_name)
+        self.warning_icon.setMaximumHeight(name_label.height())
+        self.warning_icon.setPixmap(self.warning_icon.pixmap().scaled(self.warning_icon.width(), self.warning_icon.height(), QtCore.Qt.KeepAspectRatio, QtGui.Qt.SmoothTransformation))
+        self.warning_icon.setAlignment(QtCore.Qt.AlignRight)
+
         tags_label = QtWidgets.QLabel(self)
         tags_label.setStyleSheet("QLabel {color: #006994}")
         tags_label.setText(str(", ".join(self.mod.tags)))
 
-        layout.addWidget(name_label, 0, 0, 1, 2)
+        layout.addWidget(name_label, 0, 0, 1, 1)
+        layout.addWidget(self.warning_icon, 0, 1, 1, 1)
         layout.addWidget(tags_label, 1, 0, 1, 2)
         layout.addWidget(self.download_button, 2, 0, 1, 2)
         layout.addWidget(self.install_button, 2, 0, 1, 1)
