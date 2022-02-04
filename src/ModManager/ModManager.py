@@ -75,7 +75,7 @@ class ModManager(Loggable):
         description = mod_data.get("Description", "")
         additional_fields = mod_data.get("AdditionalFields", None)
 
-        return Mod(
+        mod = Mod(
             id=mod_id,
             display_name=name,
             description=description,
@@ -95,6 +95,10 @@ class ModManager(Loggable):
             downloaded_dir_path=download_dir,
             installed_dir_path=install_dir
         )
+
+        mod.verify_game_version(self.config.config["game_version"])
+
+        return mod
 
     def update_mod_list(self, mods: list[Mod], installed: bool = False) -> None:
         """

@@ -30,6 +30,7 @@ class Mod:
     downloaded_dir_path: str = None
     installed_dir_path: str = None
     update_available: bool = False
+    compatible_game_version: bool = False
 
     def download(self, path: str = "./data/downloads/") -> bool:
         """
@@ -76,6 +77,18 @@ class Mod:
             return False
 
         return True
+
+    def verify_game_version(self, game_version: str) -> bool:
+        """
+        Verify that the mod was made for the current game version.
+        :param game_version: Game version to check for.
+        :return: Whether or not the mod is compatible.
+        """
+        if game_version == self.game_version:
+            self.compatible_game_version = True
+        else:
+            self.compatible_game_version = False
+        return self.compatible_game_version
 
 
 if __name__ == '__main__':
