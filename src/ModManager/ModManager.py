@@ -340,8 +340,8 @@ class ModManager(Loggable):
                         data = json.loads(info_file.read())
                         info_file.close()
                     if file in ["mod.png", "mod.jpg"]:
-                        image_file = open(os.path.join(local_mod_dir, file), 'r', encoding="raw_unicode_escape")
-                        mod_image = image_file
+                        image_file = open(os.path.join(local_mod_dir, file), 'rb')
+                        mod_image = image_file.read()
                         image_file.close()
 
                 if data is not None:
