@@ -23,6 +23,8 @@ class ModWidget(QtWidgets.QFrame):
         self.install_button = None
         self.warning_icon = None
 
+        self.rows = []
+
         self.setToolTip(self.mod.display_name)
 
         self.context_menu = None
@@ -36,7 +38,7 @@ class ModWidget(QtWidgets.QFrame):
         Sets up the widget representation; adding the labels and download button.
         """
 
-        layout = QtWidgets.QGridLayout()
+        layout = QtWidgets.QVBoxLayout()
 
         self.downloader_thread.finished.connect(self.thread_finished)
         self.updater_thread.finished.connect(self.thread_finished)
@@ -73,12 +75,48 @@ class ModWidget(QtWidgets.QFrame):
         tags_label.setStyleSheet("QLabel {color: #006994}")
         tags_label.setText(str(", ".join(self.mod.tags)))
 
-        layout.addWidget(name_label, 0, 0, 1, 1)
-        layout.addWidget(self.warning_icon, 0, 1, 1, 1)
-        layout.addWidget(tags_label, 1, 0, 1, 2)
-        layout.addWidget(self.download_button, 2, 0, 1, 2)
-        layout.addWidget(self.install_button, 2, 0, 1, 1)
-        layout.addWidget(self.update_button, 2, 1, 1, 1)
+        top_row = QtWidgets.QWidget(self)
+        top_row_layout = QtWidgets.QHBoxLayout()
+
+        name_label.setParent(top_row)
+        self.warning_icon.setParent(top_row)
+
+        top_row_layout.addWidget(name_label)
+        top_row_layout.addWidget(self.warning_icon)
+
+        top_row.setLayout(top_row_layout)
+
+        layout.addWidget(top_row)
+
+        second_row = QtWidgets.QWidget(self)
+        second_row_layout = QtWidgets.QHBoxLayout()
+
+        tags_label.setParent(second_row)
+
+        second_row_layout.addWidget(tags_label)
+
+        second_row.setLayout(second_row_layout)
+
+        layout.addWidget(second_row)
+
+        bottom_row = QtWidgets.QWidget(self)
+        bottom_row_layout = QtWidgets.QGridLayout()
+
+        self.download_button.setParent(bottom_row)
+        self.install_button.setParent(bottom_row)
+        self.update_button.setParent(bottom_row)
+
+        bottom_row_layout.addWidget(self.download_button, 2, 0, 1, 2)
+        bottom_row_layout.addWidget(self.install_button, 2, 0, 1, 1)
+        bottom_row_layout.addWidget(self.update_button, 2, 1, 1, 1)
+
+        bottom_row.setLayout(bottom_row_layout)
+
+        layout.addWidget(bottom_row)
+
+        self.rows.append(top_row)
+        self.rows.append(second_row)
+        self.rows.append(bottom_row)
 
         self.refresh_buttons()
 
