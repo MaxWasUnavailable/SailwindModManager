@@ -8,6 +8,7 @@ from src.Logger.Logger import Logger
 from src.Mod.Mod import Mod
 
 from PySide2 import QtCore, QtWidgets, QtGui
+from ast import literal_eval
 from copy import copy
 
 
@@ -79,7 +80,7 @@ class ManagerGUI(Loggable, QtWidgets.QMainWindow):
         Sets up the window.
         Initialises the necessary widgets.
         """
-        self.central_widget = ManagerTabWidget(self, self.mod_manager)
+        self.central_widget = ManagerTabWidget(self, self.mod_manager, self.config)
         self.setCentralWidget(self.central_widget)
 
 
@@ -87,12 +88,15 @@ class ManagerTabWidget(QtWidgets.QTabWidget):
     """
     A widget that holds all tabs.
     """
-    def __init__(self, parent, mod_manager: ModManager):
+    def __init__(self, parent, mod_manager: ModManager, config: Config):
         super().__init__(parent)
         self.mod_manager = mod_manager
+        self.config = config
 
         self.download_tab = None
         self.installation_tab = None
+        self.settings_tab = None
+        self.save_manager_tab = None
 
         self.setup_tabs()
 
@@ -109,6 +113,181 @@ class ManagerTabWidget(QtWidgets.QTabWidget):
         self.installation_tab = InstallationTab(self, self.mod_manager)
 
         self.addTab(self.installation_tab, "Installed Mods")
+
+        self.save_manager_tab = SaveManagerTab(self, self.config)
+
+        self.addTab(self.save_manager_tab, "Save Manager")
+
+        self.settings_tab = SettingsTab(self, self.config)
+
+        self.addTab(self.settings_tab, "Settings")
+
+
+# Save Manager Tab
+
+
+class SaveManagerTab(QtWidgets.QWidget):
+    """
+    A tab that holds save manager-related widgets.
+    """
+    def __init__(self, parent, config: Config):
+        super().__init__(parent)
+        self.config = config
+
+        self.save_manager_widget = None
+
+        self.setup_widget()
+
+    def setup_widget(self):
+
+        layout = QtWidgets.QGridLayout(self)
+
+        self.save_manager_widget = SaveManagerWidget(self, config=self.config)
+
+        self.save_manager_widget.setMinimumSize(self.save_manager_widget.sizeHint())
+
+        layout.addWidget(self.save_manager_widget, 0, 0)
+
+        self.setLayout(layout)
+
+
+class SaveManagerWidget(QtWidgets.QFrame):
+    """
+    Widget that handles editing of settings.
+    """
+    def __init__(self,  parent, config: Config):
+        super().__init__(parent)
+        self.config = config
+
+        self.setFrameStyle(QtCore.Qt.SolidLine)
+        layout = QtWidgets.QVBoxLayout()
+
+        self.setLayout(layout)
+
+
+# Settings Tab
+
+
+class SettingsTab(QtWidgets.QWidget):
+    """
+    A tab that holds settings-related widgets.
+    """
+    def __init__(self, parent, config: Config):
+        super().__init__(parent)
+        self.config = config
+
+        self.settings_editor = None
+
+        self.setup_widget()
+
+    def setup_widget(self):
+
+        layout = QtWidgets.QGridLayout(self)
+
+        self.settings_editor = SettingsEditor(self, config=self.config)
+        self.settings_menu = SettingsMenu(self, config=self.config)
+
+        self.settings_editor.setMinimumSize(self.settings_editor.sizeHint())
+        self.settings_menu.setMinimumSize(self.settings_menu.sizeHint())
+
+        layout.addWidget(self.settings_editor, 0, 0, 7, 1)
+        layout.addWidget(self.settings_menu, 7, 0, 1, 1)
+
+        self.setLayout(layout)
+
+
+class SettingsEditor(QtWidgets.QFrame):
+    """
+    Widget that handles editing of settings.
+    """
+    def __init__(self,  parent, config: Config):
+        super().__init__(parent)
+        self.config = config
+
+        self.setFrameStyle(QtCore.Qt.SolidLine)
+
+        self.github_access_token_field = None
+        self.downloads_directory_field = None
+        self.game_directory_field = None
+        self.repository_ids_list = None
+
+        self.setup_widget()
+
+    def setup_widget(self):
+        self.github_access_token_field = QtWidgets.QLineEdit(self)
+        self.github_access_token_field.setToolTip("Optional. Can be changed to a personal token to prevent being rate limited.")
+        self.github_access_token_field.setText(self.config.config.get("github_access_token", ""))
+
+        self.downloads_directory_field = QtWidgets.QLineEdit(self)
+        self.downloads_directory_field.setToolTip("Directory to download mods to.")
+        self.downloads_directory_field.setText(self.config.config.get("downloads_directory", ""))
+
+        self.game_directory_field = QtWidgets.QLineEdit(self)
+        self.game_directory_field.setToolTip("Game's directory.")
+        self.game_directory_field.setText(self.config.config.get("game_directory", ""))
+
+        self.repository_ids_list = QtWidgets.QLineEdit(self)
+        self.repository_ids_list.setToolTip("List of repositories to pull mods from. Do not touch if you don't know what you're doing.")
+        self.repository_ids_list.setText(str(self.config.config.get("repository_ids", [])))
+
+        layout = QtWidgets.QVBoxLayout()
+
+        for field in [(self.github_access_token_field, 'Github Access Token:'),
+                      (self.downloads_directory_field, 'Downloads Directory:'),
+                      (self.game_directory_field, 'Game Directory:'),
+                      (self.repository_ids_list, 'Repository IDs:')]:
+
+            subwidget_layout = QtWidgets.QHBoxLayout()
+
+            subwidget = QtWidgets.QWidget(self)
+
+            field[0].setParent(subwidget)
+
+            field_label = QtWidgets.QLabel(subwidget)
+            field_label.setText(field[1])
+
+            subwidget_layout.addWidget(field_label)
+            subwidget_layout.addWidget(field[0])
+
+            subwidget.setLayout(subwidget_layout)
+
+            layout.addWidget(subwidget)
+
+        self.setLayout(layout)
+
+    def apply_settings(self):
+        self.config.config["github_access_token"] = self.github_access_token_field.text()
+        self.config.config["downloads_directory"] = self.downloads_directory_field.text()
+        self.config.config["game_directory"] = self.game_directory_field.text()
+        self.config.config["repository_ids"] = literal_eval(self.repository_ids_list.text())
+        self.config.save_config()
+
+
+class SettingsMenu(QtWidgets.QFrame):
+    """
+    Widget that handles confirming of settings.
+    """
+    def __init__(self,  parent, config: Config):
+        super().__init__(parent)
+        self.config = config
+
+        self.confirm_button = None
+
+        self.setup_widget()
+
+    def setup_widget(self):
+        layout = QtWidgets.QHBoxLayout()
+
+        self.confirm_button = QtWidgets.QPushButton(self)
+        self.confirm_button.setText("Apply settings")
+
+        layout.addWidget(QtWidgets.QLabel(self))
+        layout.addWidget(self.confirm_button)
+        layout.addWidget(QtWidgets.QLabel(self))
+
+        self.setLayout(layout)
+
+        self.confirm_button.pressed.connect(lambda: self.parent().settings_editor.apply_settings())
 
 
 # Installation Tab
