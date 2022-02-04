@@ -1,0 +1,1 @@
+pyinstaller --name="SailwindModManager" --windowed --hidden-import=_cffi_backend -F run.py
