@@ -19,7 +19,7 @@ class Config:
         """
         self.load_config(self.config_path)
 
-    def load_config(self, config_path) -> None:
+    def load_config(self, config_path: str) -> None:
         """
         Loads a config from a file path.
         :param config_path: Path to load config file from.
@@ -27,3 +27,21 @@ class Config:
         config_file = open(config_path, 'r')
         self.config = yaml.load(config_file)
         config_file.close()
+
+    def save_config(self, config_path: str = None) -> bool:
+        """
+        Save a config to file.
+        :param config_path:  Path to save config to.
+        :return: Whether or not the save was successful.
+        """
+        if config_path is None:
+            if self.config_path is None:
+                return False
+            config_path = self.config_path
+        try:
+            config_file = open(config_path, 'w')
+            yaml.dump(self.config, config_file)
+            config_file.close()
+            return True
+        except Exception as e:
+            return False
