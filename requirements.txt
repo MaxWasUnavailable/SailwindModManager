@@ -1,3 +1,4 @@
 requests~=2.27.1
 PySide2~=5.15.2
 PyGithub~=1.55
+ruamel.yaml~=0.17.20
