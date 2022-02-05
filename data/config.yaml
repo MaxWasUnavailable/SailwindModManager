@@ -1,6 +1,6 @@
 github_access_token: ""
 downloads_directory: "./data/downloads/"
-game_directory: ""
+mods_directory: ""
 repository_ids:
   - "MaxWasUnavailable/SailwindModRepository"
 game_version: "0.16.2"
