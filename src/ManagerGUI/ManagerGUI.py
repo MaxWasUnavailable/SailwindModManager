@@ -9,7 +9,11 @@ from src.Mod.Mod import Mod
 
 from PySide2 import QtCore, QtWidgets, QtGui
 from ast import literal_eval
+from os.path import exists
 from copy import copy
+
+
+ABOUT_TEXT = "Made by Max (Max#0007).<br>For more information, feel free to contact me on the Sailwind Discord server!<br>This tool was written in Python 3.9, using Qt as graphics library.<br>The mod repository can be found <a href=\"https://github.com/MaxWasUnavailable/SailwindModRepository\">here</a>.<br>The tool's source code can be found <a href=\"https://github.com/MaxWasUnavailable/SailwindModManager\">here</a>."
 
 
 class Popup(QtWidgets.QWidget):
@@ -294,21 +298,35 @@ class SettingsMenu(QtWidgets.QFrame):
     """
     def __init__(self,  parent, config: Config):
         super().__init__(parent)
+        self.setFrameStyle(QtCore.Qt.SolidLine)
         self.config = config
 
         self.confirm_button = None
+        self.umm_verified_label = None
+        self.rows = []
 
         self.setup_widget()
 
     def setup_widget(self):
-        layout = QtWidgets.QHBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
 
-        self.confirm_button = QtWidgets.QPushButton(self)
+        top_row = QtWidgets.QWidget(self)
+        top_row_layout = QtWidgets.QHBoxLayout()
+
+        self.confirm_button = QtWidgets.QPushButton(top_row)
         self.confirm_button.setText("Apply settings")
 
-        layout.addWidget(QtWidgets.QLabel(self))
-        layout.addWidget(self.confirm_button)
-        layout.addWidget(QtWidgets.QLabel(self))
+        top_row_layout.addWidget(QtWidgets.QLabel(top_row))
+        top_row_layout.addWidget(self.confirm_button)
+        top_row_layout.addWidget(QtWidgets.QLabel(top_row))
+
+        top_row.setLayout(top_row_layout)
+
+        layout.addWidget(top_row)
+
+        self.umm_verified_label = UMMLabel(self, self.config)
+
+        layout.addWidget(self.umm_verified_label)
 
         self.setLayout(layout)
 
@@ -333,12 +351,11 @@ class InstallationTab(QtWidgets.QWidget):
         self.setup_widget()
 
     def setup_widget(self):
-
         layout = QtWidgets.QGridLayout(self)
 
         self.mod_display = ModDisplay(self)
         self.mod_list = InstalledModListContainer(self, mod_manager=self.mod_manager)
-        self.installation_misc_menu = InstallMiscMenu(self)
+        self.installation_misc_menu = InstallMiscMenu(self, self.mod_manager.config)
 
         self.mod_display.setMinimumSize(self.mod_display.sizeHint())
         self.mod_list.setMinimumSize(self.mod_list.sizeHint())
@@ -426,9 +443,11 @@ class InstallMiscMenu(QtWidgets.QFrame):
     """
     Misc menu widget with buttons related to the installation tab.
     """
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, config=None):
         super().__init__(parent)
         self.setFrameStyle(QtCore.Qt.SolidLine)
+        self.config = config
+
         self.main_window = self.parent().parent().parent()
 
         self.setup_widget()
@@ -446,12 +465,10 @@ class InstallMiscMenu(QtWidgets.QFrame):
         about_button = QtWidgets.QPushButton(self)
         about_button.setText("About")
 
-        label = QtWidgets.QLabel(self)
-        label.setText("Created by Max.")
-        label.setAlignment(QtCore.Qt.AlignCenter)
+        label = UMMLabel(self, self.config)
 
         refresh_button.clicked.connect(lambda: self.parent().mod_list.list.refresh_list(refresh=True))
-        about_button.clicked.connect(lambda: self.main_window.popup("For more information, feel free to contact me on the Sailwind Discord server!<br>This tool was written in Python 3.9, using Qt as graphics library.<br>The mod repository can be found <a href=\"https://github.com/MaxWasUnavailable/SailwindModRepository\">here</a>.<br>The tool's source code can be found <a href=\"https://github.com/MaxWasUnavailable/SailwindModManager\">here</a>."))
+        about_button.clicked.connect(lambda: self.main_window.popup(ABOUT_TEXT))
 
         layout.addWidget(refresh_button, 0, 0)
         layout.addWidget(about_button, 0, 1)
@@ -482,7 +499,7 @@ class DownloadTab(QtWidgets.QWidget):
 
         self.mod_display = ModDisplay(self)
         self.mod_list = ModListContainer(self, mod_manager=self.mod_manager)
-        self.misc_menu = MiscMenu(self)
+        self.misc_menu = MiscMenu(self, config=self.mod_manager.config)
 
         self.mod_display.setMinimumSize(self.mod_display.sizeHint())
         self.mod_list.setMinimumSize(self.mod_list.sizeHint())
@@ -802,9 +819,11 @@ class MiscMenu(QtWidgets.QFrame):
     """
     Misc menu widget with buttons related to the downloads tab.
     """
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, config=None):
         super().__init__(parent)
         self.setFrameStyle(QtCore.Qt.SolidLine)
+        self.config = config
+
         self.main_window = self.parent().parent().parent()
 
         self.setup_widget()
@@ -822,15 +841,46 @@ class MiscMenu(QtWidgets.QFrame):
         about_button = QtWidgets.QPushButton(self)
         about_button.setText("About")
 
-        label = QtWidgets.QLabel(self)
-        label.setText("Created by Max.")
-        label.setAlignment(QtCore.Qt.AlignCenter)
+        label = UMMLabel(self, self.config)
 
         discord_button.clicked.connect(lambda: self.main_window.popup("""<a href=\"https://discord.gg/msuBMFrpYg\">https://discord.gg/msuBMFrpYg</a>"""))
-        about_button.clicked.connect(lambda: self.main_window.popup("For more information, feel free to contact me on the Sailwind Discord server!<br>This tool was written in Python 3.9, using Qt as graphics library.<br>The mod repository can be found <a href=\"https://github.com/MaxWasUnavailable/SailwindModRepository\">here</a>.<br>The tool's source code can be found <a href=\"https://github.com/MaxWasUnavailable/SailwindModManager\">here</a>."))
+        about_button.clicked.connect(lambda: self.main_window.popup(ABOUT_TEXT))
 
         layout.addWidget(discord_button, 0, 0)
         layout.addWidget(about_button, 0, 1)
         layout.addWidget(label, 1, 0, 1, 2)
 
         self.setLayout(layout)
+
+
+# UMM Check Label
+
+
+class UMMLabel(QtWidgets.QLabel):
+    def __init__(self,  parent, config: Config):
+        super().__init__(parent)
+        self.config = config
+
+        self.setup_widget()
+        self.refresh_umm_label()
+
+    def setup_widget(self):
+        self.setTextFormat(QtCore.Qt.RichText)
+        self.setAlignment(QtCore.Qt.AlignCenter)
+        self.setTextInteractionFlags(QtCore.Qt.TextBrowserInteraction)
+        self.setOpenExternalLinks(True)
+
+    def check_umm_installed(self) -> bool:
+        installed = False
+        mods_path = self.config.config["mods_directory"]
+
+        if exists(f"{mods_path}/../Sailwind_Data/Managed/UnityModManager/UnityModManager.dll"):
+            installed = True
+
+        return installed
+
+    def refresh_umm_label(self):
+        if self.check_umm_installed():
+            self.setText("Unity Mod Manager appears to be installed!")
+        else:
+            self.setText("""Unity Mod Manager does not appear to be installed.<br>You can download and install it from here:<br><a href =\"https://www.nexusmods.com/site/mods/21\">https://www.nexusmods.com/site/mods/21</a>""")
