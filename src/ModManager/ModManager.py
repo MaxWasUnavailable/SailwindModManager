@@ -118,7 +118,7 @@ class ModManager(Loggable):
             else:
                 if existing_entry.downloaded_dir_path is not None:
                     # Existing mod entry is downloaded
-                    if mod.downloaded_dir_path is None:
+                    if mod.downloaded_dir_path in [None, ""]:
                         # New mod is not downloaded
                         # --> Update download URL in case of local copy not having one, or download URL having updated
                         if installed:
@@ -141,12 +141,12 @@ class ModManager(Loggable):
             if overwrite:
                 if installed:
                     self.installed_mods[mod.id] = mod
-                    if self.installed_mods[mod.id].download_url is None and existing_entry is not None:
+                    if self.installed_mods[mod.id].download_url in [None, ""] and existing_entry is not None:
                         # If old entry had a download URL and new one doesn't, update new entry with old download URL.
                         self.installed_mods[mod.id].download_url = existing_entry.download_url
                 else:
                     self.mods[mod.id] = mod
-                    if self.mods[mod.id].download_url is None and existing_entry is not None:
+                    if self.mods[mod.id].download_url in [None, ""] and existing_entry is not None:
                         # If old entry had a download URL and new one doesn't, update new entry with old download URL.
                         self.mods[mod.id].download_url = existing_entry.download_url
 
@@ -332,7 +332,7 @@ class ModManager(Loggable):
 
     def refresh_local_mods(self, directory: str, downloaded: bool = False, installed: bool = False) -> list[Mod]:
         mods = []
-        if directory is None:
+        if directory in [None, ""]:
             self.log("Tried to refresh from local mods directory without a directory being given.", is_error=True)
             return mods
 
