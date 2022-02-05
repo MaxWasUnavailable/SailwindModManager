@@ -365,9 +365,7 @@ class ModManager(Loggable):
         self.refresh_local_mods(downloaded_dir, downloaded=True)
 
     def __refresh_installed_mods(self):
-        installed_dir = self.config.config.get("game_directory", None)
-        if installed_dir is not None:
-            installed_dir += "/mods"
+        installed_dir = self.config.config.get("mods_directory", None)
         self.installed_mods.clear()
         self.refresh_local_mods(installed_dir, installed=True)
 
@@ -415,10 +413,10 @@ class ModManager(Loggable):
         :param mod_id: Mod id of the mod to install
         :return: Whether or not the installation was successful.
         """
-        installed_dir = self.config.config.get("game_directory", None)
+        installed_dir = self.config.config.get("mods_directory", None)
 
         if installed_dir in [None, ""]:
-            self.log("Game installation directory was not specified. Please check your configuration file.")
+            self.log("Mods directory was not specified. Please check your configuration file.")
             return False
 
         mod_to_install = self.mods.get(mod_id, None)
@@ -442,13 +440,13 @@ class ModManager(Loggable):
 
         folder_name = mod_downloaded_dir.split("/")[-1]
 
-        if os.path.exists(f"{installed_dir}/mods/{folder_name}"):
+        if os.path.exists(f"{installed_dir}/{folder_name}"):
             self.log("Mod is already installed. Please ensure that there are no leftover files of this mod in the mods directory.")
             return False
 
-        copytree(mod_downloaded_dir, f"{installed_dir}/mods/{folder_name}")
+        copytree(mod_downloaded_dir, f"{installed_dir}/{folder_name}")
 
-        self.log(f"Mod installed in directory: {installed_dir}/mods/{folder_name}")
+        self.log(f"Mod installed in directory: {installed_dir}/{folder_name}")
 
         self.__refresh_installed_mods()
 

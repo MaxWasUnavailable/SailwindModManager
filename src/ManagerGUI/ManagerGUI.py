@@ -210,7 +210,7 @@ class SettingsEditor(QtWidgets.QFrame):
 
         self.github_access_token_field = None
         self.downloads_directory_field = None
-        self.game_directory_field = None
+        self.mods_directory_field = None
         self.game_version_field = None
         self.repository_ids_list = None
 
@@ -225,9 +225,9 @@ class SettingsEditor(QtWidgets.QFrame):
         self.downloads_directory_field.setToolTip("Directory to download mods to.")
         self.downloads_directory_field.setText(self.config.config.get("downloads_directory", ""))
 
-        self.game_directory_field = QtWidgets.QLineEdit(self)
-        self.game_directory_field.setToolTip("Game's directory.")
-        self.game_directory_field.setText(self.config.config.get("game_directory", ""))
+        self.mods_directory_field = QtWidgets.QLineEdit(self)
+        self.mods_directory_field.setToolTip("Game's mods directory.")
+        self.mods_directory_field.setText(self.config.config.get("mods_directory", ""))
 
         self.game_version_field = QtWidgets.QLineEdit(self)
         self.game_version_field.setToolTip("Game's version. For now, this has to be manually set.")
@@ -240,8 +240,8 @@ class SettingsEditor(QtWidgets.QFrame):
         layout = QtWidgets.QVBoxLayout()
 
         for field in [(self.github_access_token_field, 'Github Access Token:'),
-                      (self.downloads_directory_field, 'Downloads Directory:'),
-                      (self.game_directory_field, 'Game Directory:'),
+                      (self.downloads_directory_field, 'Downloads Cache Directory:'),
+                      (self.mods_directory_field, 'Mods Directory:'),
                       (self.game_version_field, 'Game Version:'),
                       (self.repository_ids_list, 'Repository IDs:')]:
 
@@ -266,7 +266,7 @@ class SettingsEditor(QtWidgets.QFrame):
     def apply_settings(self):
         self.config.config["github_access_token"] = self.github_access_token_field.text()
         self.config.config["downloads_directory"] = self.downloads_directory_field.text()
-        self.config.config["game_directory"] = self.game_directory_field.text()
+        self.config.config["mods_directory"] = self.mods_directory_field.text()
         self.config.config["repository_ids"] = literal_eval(self.repository_ids_list.text())
         self.config.config["game_version"] = self.game_version_field.text()
         self.config.save_config()
