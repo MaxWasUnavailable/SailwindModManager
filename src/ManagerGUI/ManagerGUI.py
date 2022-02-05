@@ -739,7 +739,7 @@ class ModList(QtWidgets.QListWidget):
         self.refreshing = False
         self.refresh_refreshing()
         if self.rate_limited:
-            self.main_window.popup("Error 403.<br>Github has rate limited you for refreshing too often.<br>To circumvent this, you'll need to use a Github token.<br>My apologies for this!")
+            self.download_tab.parent().parent().parent().popup("Error 403.<br>Github has rate limited you for refreshing too often.<br>To circumvent this, you'll need to use a Github token.<br>My apologies for this!")
             self.rate_limited = False
 
     def clear_list(self) -> None:
