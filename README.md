@@ -4,10 +4,9 @@
 
 The Sailwind Mod Manager is an open source mod manager for the Sailwind community.
 
-It currently allows you to browse and download mods.
+It currently allows you to browse, download and install mods.
 
 Future plans include:
-* Installing and managing of mod installations.
 * Save management & backups.
 * Favouriting & categorising of mods.
 * Making of mod collections / modpacks.
