@@ -217,7 +217,14 @@ class ModManager(Loggable):
             return False
 
         downloads_dir = self.config.config.get("downloads_directory", "")
-        if mod.download(downloads_dir):
+
+        try:
+            download_result = mod.download(downloads_dir)
+        except Exception as e:
+            self.log(f"Mod download failed. Exception: {e}", is_error=True)
+            return False
+
+        if download_result:
             self.log("Mod downloaded successfully.")
             self.__refresh_downloaded_mods()
             return True
