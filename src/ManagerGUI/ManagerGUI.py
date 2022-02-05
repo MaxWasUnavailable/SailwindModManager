@@ -210,11 +210,18 @@ class SettingsEditor(QtWidgets.QFrame):
 
         self.github_access_token_field = None
         self.downloads_directory_field = None
+        self.downloads_dir_dialogue_button = None
         self.mods_directory_field = None
+        self.mods_dir_dialogue_button = None
         self.game_version_field = None
         self.repository_ids_list = None
 
         self.setup_widget()
+
+    def file_dialogue(self, field_to_fill):
+        path = QtWidgets.QFileDialog.getExistingDirectory()
+        if path not in [None, ""]:
+            field_to_fill.setText(str(path))
 
     def setup_widget(self):
         self.github_access_token_field = QtWidgets.QLineEdit(self)
@@ -224,10 +231,16 @@ class SettingsEditor(QtWidgets.QFrame):
         self.downloads_directory_field = QtWidgets.QLineEdit(self)
         self.downloads_directory_field.setToolTip("Directory to download mods to.")
         self.downloads_directory_field.setText(self.config.config.get("downloads_directory", ""))
+        self.downloads_dir_dialogue_button = QtWidgets.QPushButton(self)
+        self.downloads_dir_dialogue_button.setText("...")
+        self.downloads_dir_dialogue_button.pressed.connect(lambda: self.file_dialogue(self.downloads_directory_field))
 
         self.mods_directory_field = QtWidgets.QLineEdit(self)
         self.mods_directory_field.setToolTip("Game's mods directory.")
         self.mods_directory_field.setText(self.config.config.get("mods_directory", ""))
+        self.mods_dir_dialogue_button = QtWidgets.QPushButton(self)
+        self.mods_dir_dialogue_button.setText("...")
+        self.mods_dir_dialogue_button.pressed.connect(lambda: self.file_dialogue(self.mods_directory_field))
 
         self.game_version_field = QtWidgets.QLineEdit(self)
         self.game_version_field.setToolTip("Game's version. For now, this has to be manually set.")
@@ -240,8 +253,8 @@ class SettingsEditor(QtWidgets.QFrame):
         layout = QtWidgets.QVBoxLayout()
 
         for field in [(self.github_access_token_field, 'Github Access Token:'),
-                      (self.downloads_directory_field, 'Downloads Cache Directory:'),
-                      (self.mods_directory_field, 'Mods Directory:'),
+                      (self.downloads_directory_field, 'Downloads Cache Directory:', self.downloads_dir_dialogue_button),
+                      (self.mods_directory_field, 'Mods Directory:', self.mods_dir_dialogue_button),
                       (self.game_version_field, 'Game Version:'),
                       (self.repository_ids_list, 'Repository IDs:')]:
 
@@ -256,6 +269,9 @@ class SettingsEditor(QtWidgets.QFrame):
 
             subwidget_layout.addWidget(field_label)
             subwidget_layout.addWidget(field[0])
+
+            if len(field) > 2:
+                subwidget_layout.addWidget(field[2])
 
             subwidget.setLayout(subwidget_layout)
 
