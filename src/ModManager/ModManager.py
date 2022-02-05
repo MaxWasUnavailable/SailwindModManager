@@ -180,7 +180,9 @@ class ModManager(Loggable):
                             if file.name == "info.json":
                                 data = json.loads(file.decoded_content.decode("utf-8"))
                             if file.name in ["mod.png", "mod.jpg"]:
+                                # TODO: May need to be downloaded through git to prevent rate limiting?
                                 mod_image = requests.get(file.download_url).content
+                                # mod_image = file.decoded_content      # This seems to not handle files that are too large (>1MB)?
 
                         if data is not None:
                             mods.append(self.parse_mod(data, download_url=mod_url, image=mod_image))
@@ -217,6 +219,8 @@ class ModManager(Loggable):
             return False
 
         downloads_dir = self.config.config.get("downloads_directory", "")
+        if downloads_dir[-1] != "/":
+            downloads_dir += "/"
 
         try:
             download_result = mod.download(downloads_dir)
@@ -332,6 +336,9 @@ class ModManager(Loggable):
             self.log("Tried to refresh from local mods directory without a directory being given.", is_error=True)
             return mods
 
+        if directory[-1] != "/":
+            directory += "/"
+
         if not os.path.exists(directory):
             self.log("Tried to refresh from local mods directory with invalid directory specified. This could be because you haven't downloaded any mods yet, or because you don't have a mods folder in the Sailwind directory.", is_error=True)
             return mods
@@ -425,6 +432,9 @@ class ModManager(Loggable):
         if installed_dir in [None, ""]:
             self.log("Mods directory was not specified. Please check your configuration file.")
             return False
+
+        if installed_dir[-1] != "/":
+            installed_dir += "/"
 
         mod_to_install = self.mods.get(mod_id, None)
         if mod_to_install in [None, ""]:
